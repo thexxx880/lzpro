@@ -29,7 +29,7 @@ video {
     z-index: 3; transition: opacity 0.4s ease;
 }
 .controls.hide { opacity: 0; pointer-events: none; }
-.top { 
+.top {
     color: #fff; font-size: 22px; font-weight: 700; text-shadow: 0 2px 8px rgba(0,0,0,0.6);
     display: flex; align-items: center; justify-content: space-between;
 }
@@ -43,7 +43,7 @@ video {
     align-items: center;
 }
 .top .history-btn {
-    font-size: 20px; 
+    font-size: 20px;
     width: 44px;
     height: 44px;
     display: flex;
@@ -51,12 +51,12 @@ video {
     justify-content: center;
     background: rgba(255,255,255,0.08);
     border-radius: 50%;
-    cursor: pointer; 
+    cursor: pointer;
     transition: all 0.2s;
 }
-.top .history-btn:hover { 
-    background: rgba(0,212,255,0.15); 
-    color: var(--primary); 
+.top .history-btn:hover {
+    background: rgba(0,212,255,0.15);
+    color: var(--primary);
 }
 .center { display: flex; justify-content: center; align-items: center; gap: 40px; }
 .btn { color: #fff; font-size: 26px; cursor: pointer; transition: all 0.2s ease; text-shadow: 0 2px 6px rgba(0,0,0,0.5); }
@@ -65,7 +65,6 @@ video {
 .bottom { display: flex; align-items: center; gap: 12px; color: #fff; }
 .bottom span { font-size: 13px; font-variant-numeric: tabular-nums; min-width: 60px; text-align: center; }
 input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
-
 /* MENÚ CONFIGURACIÓN */
 .settings-menu {
     position: absolute; bottom: 75px; right: 30px;
@@ -86,7 +85,6 @@ input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
     font-size: 11px; background: var(--primary); color: #000; padding: 1px 7px;
     border-radius: 10px; margin-left: 8px; font-weight: 600;
 }
-
 /* LOADER */
 .quality-loader {
     position: absolute; inset: 0; z-index: 5;
@@ -103,7 +101,6 @@ input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
     animation: spin 0.9s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-
 /* MODAL REANUDAR */
 .resume-modal {
     position: absolute; inset: 0; z-index: 10;
@@ -154,7 +151,6 @@ input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
 #btn-restart:hover {
     background: #444;
 }
-
 /* MODAL HISTORIAL RECIENTE */
 .recent-modal {
     position: absolute;
@@ -291,7 +287,6 @@ input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
     color: #666;
     font-size: 12px;
 }
-
 /* RESPONSIVE */
 @media (max-width: 768px) {
     .btn.big { font-size: 48px; } .btn { font-size: 22px; } .top { font-size: 17px; }
@@ -305,19 +300,18 @@ input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
 <div id="player">
     <div id="backdrop-overlay"></div>
     <video id="video" playsinline></video>
-   
+  
     <div id="quality-loader" class="quality-loader">
         <div class="spinner"></div>
         <span>Cambiando calidad...</span>
     </div>
-    
+   
     <div class="controls" id="controls">
         <div class="top" id="title">
             <!-- Lado izquierdo: Título -->
             <div class="top-left">
                 <span id="title-text">Cargando...</span>
             </div>
-
             <!-- Lado derecho: Historial -->
             <div class="top-right">
                 <span onclick="openRecentModal()" class="history-btn" title="Ver historial reciente">
@@ -325,13 +319,13 @@ input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
                 </span>
             </div>
         </div>
-        
+       
         <div class="center">
             <i class="fas fa-rotate-left btn" onclick="rewind()"></i>
             <i class="fas fa-play btn big" id="playBtn" onclick="togglePlay()"></i>
             <i class="fas fa-rotate-right btn" onclick="forward()"></i>
         </div>
-        
+       
         <div class="bottom">
             <span id="current">00:00:00</span>
             <input type="range" id="seek" value="0" min="0" max="100" step="0.1">
@@ -340,12 +334,12 @@ input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
             <i class="fas fa-expand btn" onclick="fullscreen()" title="Pantalla completa"></i>
         </div>
     </div>
-    
+   
     <div id="settings-menu" class="settings-menu">
         <div class="settings-header">Calidad de video</div>
         <div id="quality-options"></div>
     </div>
-    
+   
     <!-- MODAL REANUDAR -->
     <div id="resume-modal" class="resume-modal">
         <div class="resume-content">
@@ -356,7 +350,6 @@ input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
             </div>
         </div>
     </div>
-
     <!-- MODAL HISTORIAL RECIENTE -->
     <div id="recent-modal" class="recent-modal">
         <div class="recent-content">
@@ -371,7 +364,6 @@ input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
         </div>
     </div>
 </div>
-
 <script>
 const video = document.getElementById("video");
 const playBtn = document.getElementById("playBtn");
@@ -389,21 +381,17 @@ const resumeModal = document.getElementById("resume-modal");
 const resumeText = document.getElementById("resume-text");
 const btnContinue = document.getElementById("btn-continue");
 const btnRestart = document.getElementById("btn-restart");
-
 // Leer parámetros de la URL
 const params = new URLSearchParams(window.location.search);
 let VIDEO_URL = params.get('video') ? decodeURIComponent(params.get('video')) : '';
 let POSTER_URL = params.get('poster') ? decodeURIComponent(params.get('poster')) : '';
 let TITLE = params.get('title') ? decodeURIComponent(params.get('title')) : 'Reproduciendo';
-
 const STORAGE_KEY = `lzplayer_resume_${btoa(VIDEO_URL || 'unknown').replace(/[^a-zA-Z0-9]/g, '').slice(0, 50)}`;
 const RECENT_KEY = "lzplayer_recent";
-
 let hlsInstance = null;
 let hasStarted = false;
 let isChangingQuality = false;
 let saveInterval = null;
-
 /* FORMATO HH:MM:SS */
 function formatTime(seconds) {
     if (!seconds || isNaN(seconds)) return "00:00:00";
@@ -412,21 +400,18 @@ function formatTime(seconds) {
     const s = Math.floor(seconds % 60);
     return `${h}:${m < 10 ? "0" + m : m}:${s < 10 ? "0" + s : s}`;
 }
-
 /* ACTUALIZAR TIEMPO TOTAL */
 function updateTotalTime() {
     if (video.duration && !isNaN(video.duration)) {
         totalTimeEl.textContent = formatTime(video.duration);
     }
 }
-
 /* GUARDAR PROGRESO */
 function saveProgress() {
     if (video.currentTime > 5 && VIDEO_URL) {
         localStorage.setItem(STORAGE_KEY, video.currentTime);
     }
 }
-
 /* CARGAR PROGRESO */
 function loadSavedProgress() {
     if (!VIDEO_URL) return;
@@ -450,12 +435,11 @@ function loadSavedProgress() {
         };
     }
 }
-
 /* CARGAR METADATOS DESDE URL */
 function loadMetadata() {
     titleEl.textContent = TITLE || "Reproduciendo";
     if (POSTER_URL) {
-        backdropOverlay.style.backgroundImage = 
+        backdropOverlay.style.backgroundImage =
             `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url('${POSTER_URL}')`;
     } else {
         backdropOverlay.style.background = '#111';
@@ -467,12 +451,11 @@ function loadMetadata() {
         alert("No se encontró el enlace del video en la URL.");
     }
 }
-
 /* CARGAR VIDEO (HLS o directo) */
 function loadVideo(url) {
     if (url.includes(".m3u8") && Hls.isSupported()) {
-        hlsInstance = new Hls({ 
-            enableWorker: true, 
+        hlsInstance = new Hls({
+            enableWorker: true,
             lowLatencyMode: true,
             backBufferLength: 90
         });
@@ -482,7 +465,6 @@ function loadVideo(url) {
         video.src = url;
     }
 }
-
 /* EVENTOS LOADER DE CALIDAD */
 video.addEventListener("waiting", () => {
     if (isChangingQuality) qualityLoader.classList.add("show");
@@ -493,14 +475,12 @@ video.addEventListener("playing", () => {
         isChangingQuality = false;
     }
 });
-
 /* GUARDAR PROGRESO CADA SEGUNDO */
 video.addEventListener("timeupdate", () => {
     if (!saveInterval && video.duration) {
         saveInterval = setInterval(saveProgress, 1000);
     }
 });
-
 /* OCULTAR BACKDROP Y MOSTRAR VIDEO */
 function hideBackdropAndShowVideo() {
     if (backdropOverlay) {
@@ -513,7 +493,6 @@ function hideBackdropAndShowVideo() {
     video.style.transition = "opacity 0.6s ease";
     video.style.opacity = "1";
 }
-
 /* CONTROLES */
 function togglePlay() {
     if (video.paused) {
@@ -526,15 +505,12 @@ function togglePlay() {
         video.pause();
     }
 }
-
-function rewind() { 
-    video.currentTime = Math.max(0, video.currentTime - 10); 
+function rewind() {
+    video.currentTime = Math.max(0, video.currentTime - 10);
 }
-
-function forward() { 
-    video.currentTime = Math.min(video.duration || 0, video.currentTime + 10); 
+function forward() {
+    video.currentTime = Math.min(video.duration || 0, video.currentTime + 10);
 }
-
 function fullscreen() {
     const el = document.getElementById("player");
     if (!document.fullscreenElement) {
@@ -543,11 +519,9 @@ function fullscreen() {
         document.exitFullscreen?.();
     }
 }
-
 function goBack() {
     window.location.href = "index.html";
 }
-
 /* MENÚ CONFIGURACIÓN */
 settingsBtn.addEventListener("click", (e) => {
     e.stopImmediatePropagation();
@@ -556,13 +530,11 @@ settingsBtn.addEventListener("click", (e) => {
         loadQualityOptions();
     }
 });
-
 document.addEventListener("click", (e) => {
     if (!settingsMenu.contains(e.target) && e.target !== settingsBtn) {
         settingsMenu.classList.remove("show");
     }
 });
-
 /* OPCIONES DE CALIDAD */
 function loadQualityOptions() {
     qualityContainer.innerHTML = "";
@@ -573,18 +545,18 @@ function loadQualityOptions() {
     let bestLevelIndex = 0;
     let maxHeight = 0;
     hlsInstance.levels.forEach((level, i) => {
-        if (level.height > maxHeight) { 
-            maxHeight = level.height; 
-            bestLevelIndex = i; 
+        if (level.height > maxHeight) {
+            maxHeight = level.height;
+            bestLevelIndex = i;
         }
     });
     const autoOption = createQualityOption("Auto (Recomendado)", -1, hlsInstance.currentLevel === -1);
     qualityContainer.appendChild(autoOption);
-    
+   
     const sortedLevels = [...hlsInstance.levels]
         .map((level, index) => ({...level, originalIndex: index}))
         .sort((a, b) => b.height - a.height);
-    
+   
     sortedLevels.forEach((level) => {
         const label = `${level.height}p`;
         const isActive = hlsInstance.currentLevel === level.originalIndex;
@@ -593,7 +565,6 @@ function loadQualityOptions() {
         qualityContainer.appendChild(option);
     });
 }
-
 function createQualityOption(label, levelIndex, isActive, isRecommended = false) {
     const div = document.createElement("div");
     div.className = `quality-option ${isActive ? "active" : ""}`;
@@ -601,7 +572,7 @@ function createQualityOption(label, levelIndex, isActive, isRecommended = false)
     if (isRecommended) html += `<span class="recommended">Recomendada</span>`;
     if (isActive) html += `<i class="fas fa-check check"></i>`;
     div.innerHTML = html;
-    
+   
     div.addEventListener("click", () => {
         if (!hlsInstance) return;
         isChangingQuality = true;
@@ -617,7 +588,6 @@ function createQualityOption(label, levelIndex, isActive, isRecommended = false)
     });
     return div;
 }
-
 /* EVENTOS DEL VIDEO */
 video.addEventListener("play", () => {
     playBtn.className = "fas fa-pause btn big";
@@ -637,7 +607,6 @@ video.addEventListener("timeupdate", () => {
 seek.addEventListener("input", () => {
     if (video.duration) video.currentTime = (seek.value / 100) * video.duration;
 });
-
 /* ATAJOS DE TECLADO */
 document.addEventListener("keydown", (e) => {
     if (e.target.tagName === "INPUT") return;
@@ -649,21 +618,17 @@ document.addEventListener("keydown", (e) => {
         document.exitFullscreen();
     }
 });
-
 /* AUTO OCULTAR CONTROLES */
 let hideTimeout;
-
 function showControls(fast = false) {
     controls.classList.remove("hide");
     clearTimeout(hideTimeout);
     const delay = fast ? 900 : 3500;
-    hideTimeout = setTimeout(() => { 
-        if (!video.paused) controls.classList.add("hide"); 
+    hideTimeout = setTimeout(() => {
+        if (!video.paused) controls.classList.add("hide");
     }, delay);
 }
-
 document.addEventListener("mousemove", () => showControls(false));
-
 document.addEventListener("touchstart", (e) => {
     if (e.target.tagName === "VIDEO" || e.target.id === "player") {
         showControls(true);
@@ -671,16 +636,12 @@ document.addEventListener("touchstart", (e) => {
         showControls(false);
     }
 });
-
 video.addEventListener("click", togglePlay);
-
 // Doble clic / doble toque → Pantalla completa
 let lastTapTime = 0;
-
 video.addEventListener("dblclick", () => {
     fullscreen();
 });
-
 video.addEventListener("touchend", (e) => {
     const currentTime = new Date().getTime();
     const tapLength = currentTime - lastTapTime;
@@ -690,17 +651,14 @@ video.addEventListener("touchend", (e) => {
     }
     lastTapTime = currentTime;
 });
-
 /* HISTORIAL RECIENTE */
 function getRecentList() {
-    try { return JSON.parse(localStorage.getItem(RECENT_KEY)) || []; } 
+    try { return JSON.parse(localStorage.getItem(RECENT_KEY)) || []; }
     catch { return []; }
 }
-
 function saveRecentList(list) {
     localStorage.setItem(RECENT_KEY, JSON.stringify(list));
 }
-
 function saveToRecent() {
     if (!VIDEO_URL || !TITLE) return;
     let recent = getRecentList();
@@ -709,6 +667,7 @@ function saveToRecent() {
         videoUrl: VIDEO_URL,
         title: TITLE,
         backdrop: POSTER_URL || "",
+        playerUrl: window.location.href,
         lastPlayed: new Date().toISOString()
     };
     if (existingIndex !== -1) recent.splice(existingIndex, 1);
@@ -716,13 +675,11 @@ function saveToRecent() {
     if (recent.length > 15) recent = recent.slice(0, 15);
     saveRecentList(recent);
 }
-
 function openRecentModal() {
     const modal = document.getElementById("recent-modal");
     const listContainer = document.getElementById("recent-list");
     listContainer.innerHTML = "";
     const recent = getRecentList();
-
     if (recent.length === 0) {
         listContainer.innerHTML = `
             <div style="padding: 40px 20px; text-align: center; color: #666;">
@@ -733,11 +690,11 @@ function openRecentModal() {
         recent.forEach((item, index) => {
             const div = document.createElement("div");
             div.className = "recent-item";
-            const thumbStyle = item.backdrop 
-                ? `background-image: url('${item.backdrop}')` 
+            const thumbStyle = item.backdrop
+                ? `background-image: url('${item.backdrop}')`
                 : `background: linear-gradient(135deg, #333, #222)`;
             const timeAgo = getTimeAgo(new Date(item.lastPlayed));
-            
+           
             div.innerHTML = `
                 <div class="thumb" style="${thumbStyle}"></div>
                 <div class="info">
@@ -748,11 +705,14 @@ function openRecentModal() {
                     <button class="btn-action btn-play" title="Reproducir"><i class="fas fa-play"></i></button>
                     <button class="btn-action btn-delete" title="Eliminar"><i class="fas fa-trash"></i></button>
                 </div>`;
-
             div.querySelector(".btn-play").onclick = (e) => {
                 e.stopImmediatePropagation();
                 closeRecentModal();
-                loadNewVideoFromRecent(item);
+                if (item.playerUrl) {
+                    window.location.href = item.playerUrl;
+                } else {
+                    loadNewVideoFromRecent(item);
+                }
             };
             div.querySelector(".btn-delete").onclick = (e) => {
                 e.stopImmediatePropagation();
@@ -763,14 +723,17 @@ function openRecentModal() {
             };
             div.onclick = () => {
                 closeRecentModal();
-                loadNewVideoFromRecent(item);
+                if (item.playerUrl) {
+                    window.location.href = item.playerUrl;
+                } else {
+                    loadNewVideoFromRecent(item);
+                }
             };
             listContainer.appendChild(div);
         });
     }
     modal.classList.add("show");
 }
-
 function getTimeAgo(date) {
     const diffMs = new Date() - date;
     const diffMins = Math.floor(diffMs / 60000);
@@ -781,44 +744,38 @@ function getTimeAgo(date) {
     if (diffHours < 24) return `hace ${diffHours} h`;
     return `hace ${diffDays} día${diffDays > 1 ? "s" : ""}`;
 }
-
 function closeRecentModal() {
     document.getElementById("recent-modal").classList.remove("show");
 }
-
 function loadNewVideoFromRecent(item) {
     VIDEO_URL = item.videoUrl;
     POSTER_URL = item.backdrop || "";
     TITLE = item.title;
     STORAGE_KEY = `lzplayer_resume_${btoa(VIDEO_URL).replace(/[^a-zA-Z0-9]/g, '').slice(0, 50)}`;
-    
+   
     titleEl.textContent = TITLE;
     if (POSTER_URL) {
-        backdropOverlay.style.backgroundImage = 
+        backdropOverlay.style.backgroundImage =
             `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url('${POSTER_URL}')`;
         backdropOverlay.style.display = "block";
         backdropOverlay.style.opacity = "1";
     } else {
         backdropOverlay.style.background = "#111";
     }
-
     if (hlsInstance) {
         hlsInstance.destroy();
         hlsInstance = null;
     }
-
     video.pause();
     video.src = "";
     video.load();
     loadVideo(VIDEO_URL);
-
     hasStarted = false;
     isChangingQuality = false;
     if (saveInterval) {
         clearInterval(saveInterval);
         saveInterval = null;
     }
-
     setTimeout(() => saveToRecent(), 300);
     setTimeout(() => {
         video.play().catch(() => {});
@@ -826,13 +783,11 @@ function loadNewVideoFromRecent(item) {
         hideBackdropAndShowVideo();
     }, 600);
 }
-
 function deleteFromRecent(index) {
     let recent = getRecentList();
     recent.splice(index, 1);
     saveRecentList(recent);
 }
-
 /* INICIALIZACIÓN */
 function initPlayer() {
     loadMetadata();
@@ -843,7 +798,6 @@ function initPlayer() {
     video.addEventListener("durationchange", updateTotalTime);
     if (video.duration) updateTotalTime();
 }
-
 initPlayer();
 </script>
 </body>
