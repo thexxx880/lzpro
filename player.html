@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LzPlayer PRO</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<style>
+:root { --primary: #00d4ff; }
+body {
+    margin: 0; background: #000; font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden;
+}
+#player {
+    position: relative; width: 100%; height: 100vh; background: #000; overflow: hidden;
+}
+#backdrop-overlay {
+    position: absolute; inset: 0; z-index: 1;
+    background-size: cover; background-position: center; transition: opacity 0.6s ease;
+}
+video {
+    width: 100%; height: 100%; object-fit: cover; position: relative; z-index: 2;
+    opacity: 0; transition: opacity 0.6s ease;
+}
+.controls {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    justify-content: space-between; padding: 25px 30px;
+    background: linear-gradient(to top, rgba(0,0,0,.85) 0%, transparent 40%);
+    z-index: 3; transition: opacity 0.4s ease;
+}
+.controls.hide { opacity: 0; pointer-events: none; }
+.top { 
+    color: #fff; font-size: 22px; font-weight: 700; text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    display: flex; align-items: center; gap: 15px;
+}
+.top .back-btn {
+    font-size: 18px; padding: 6px 14px; background: rgba(255,255,255,0.1);
+    border-radius: 8px; cursor: pointer; transition: all 0.2s;
+}
+.top .back-btn:hover { background: rgba(255,255,255,0.2); }
+.center { display: flex; justify-content: center; align-items: center; gap: 40px; }
+.btn { color: #fff; font-size: 26px; cursor: pointer; transition: all 0.2s ease; text-shadow: 0 2px 6px rgba(0,0,0,0.5); }
+.btn:hover { color: var(--primary); transform: scale(1.15); }
+.btn.big { font-size: 68px; }
+.bottom { display: flex; align-items: center; gap: 12px; color: #fff; }
+.bottom span { font-size: 13px; font-variant-numeric: tabular-nums; min-width: 60px; text-align: center; }
+input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
+
+/* MENÚ CONFIGURACIÓN */
+.settings-menu {
+    position: absolute; bottom: 75px; right: 30px;
+    background: rgba(20,20,20,0.95); border-radius: 12px; padding: 12px 0;
+    min-width: 240px; box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.1); z-index: 10; display: none; flex-direction: column;
+}
+.settings-menu.show { display: flex; }
+.settings-header { padding: 8px 18px; font-size: 14px; font-weight: 600; color: #aaa; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 6px; }
+.settings-label { padding: 0 18px 6px; font-size: 13px; color: #ccc; font-weight: 500; }
+.quality-option {
+    padding: 11px 18px; font-size: 14px; color: #fff; cursor: pointer;
+    transition: background 0.2s; display: flex; align-items: center; gap: 10px;
+}
+.quality-option:hover { background: rgba(255,255,255,0.08); }
+.quality-option.active { color: var(--primary); font-weight: 600; }
+.quality-option .check { margin-left: auto; color: var(--primary); }
+.quality-option .recommended {
+    font-size: 11px; background: var(--primary); color: #000; padding: 1px 7px;
+    border-radius: 10px; margin-left: 8px; font-weight: 600;
+}
+
+/* LOADER */
+.quality-loader {
+    position: absolute; inset: 0; z-index: 5;
+    background: rgba(0,0,0,0.7);
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    color: #fff; gap: 14px;
+}
+.quality-loader.show { display: flex; }
+.spinner {
+    width: 46px; height: 46px;
+    border: 5px solid rgba(255,255,255,0.2);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* MODAL REANUDAR */
+.resume-modal {
+    position: absolute; inset: 0; z-index: 10;
+    background: rgba(0,0,0,0.85);
+    display: none; align-items: center; justify-content: center;
+}
+.resume-modal.show { display: flex; }
+.resume-content {
+    background: #1a1a1a;
+    padding: 30px 35px;
+    border-radius: 16px;
+    text-align: center;
+    max-width: 420px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.resume-content p {
+    color: #fff;
+    font-size: 17px;
+    margin-bottom: 25px;
+    line-height: 1.4;
+}
+.resume-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+.resume-buttons button {
+    padding: 12px 28px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+#btn-continue {
+    background: var(--primary);
+    color: #000;
+}
+#btn-continue:hover {
+    background: #00b8e6;
+}
+#btn-restart {
+    background: #333;
+    color: #fff;
+}
+#btn-restart:hover {
+    background: #444;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .btn.big { font-size: 48px; } .btn { font-size: 22px; } .top { font-size: 17px; }
+    .controls { padding: 18px 20px; }
+    .settings-menu { right: 20px; min-width: 210px; }
+    .resume-content { margin: 0 15px; padding: 25px; }
+    .top .back-btn { font-size: 15px; padding: 5px 10px; }
+}
+</style>
+</head>
+<body>
+<div id="player">
+    <div id="backdrop-overlay"></div>
+    <video id="video" playsinline></video>
+   
+    <div id="quality-loader" class="quality-loader">
+        <div class="spinner"></div>
+        <span>Cambiando calidad...</span>
+    </div>
+    
+    <div class="controls" id="controls">
+        <div class="top" id="title">
+            <span onclick="goBack()" class="back-btn"><i class="fas fa-arrow-left"></i> Biblioteca</span>
+            <span id="title-text">Cargando...</span>
+        </div>
+        
+        <div class="center">
+            <i class="fas fa-rotate-left btn" onclick="rewind()"></i>
+            <i class="fas fa-play btn big" id="playBtn" onclick="togglePlay()"></i>
+            <i class="fas fa-rotate-right btn" onclick="forward()"></i>
+        </div>
+        
+        <div class="bottom">
+            <span id="current">00:00:00</span>
+            <input type="range" id="seek" value="0" min="0" max="100" step="0.1">
+            <span id="total">00:00:00</span>
+            <i class="fas fa-cog btn" id="settingsBtn" title="Configuración"></i>
+            <i class="fas fa-expand btn" onclick="fullscreen()" title="Pantalla completa"></i>
+        </div>
+    </div>
+    
+    <div id="settings-menu" class="settings-menu">
+        <div class="settings-header">Calidad de video</div>
+        <div id="quality-options"></div>
+    </div>
+    
+    <!-- MODAL REANUDAR -->
+    <div id="resume-modal" class="resume-modal">
+        <div class="resume-content">
+            <p id="resume-text">Te quedaste en 00:00:00.<br>¿Quieres continuar desde ahí?</p>
+            <div class="resume-buttons">
+                <button id="btn-continue">Sí, continuar</button>
+                <button id="btn-restart">No, empezar desde el principio</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const video = document.getElementById("video");
+const playBtn = document.getElementById("playBtn");
+const controls = document.getElementById("controls");
+const seek = document.getElementById("seek");
+const titleEl = document.getElementById("title-text");
+const currentTimeEl = document.getElementById("current");
+const totalTimeEl = document.getElementById("total");
+const backdropOverlay = document.getElementById("backdrop-overlay");
+const settingsBtn = document.getElementById("settingsBtn");
+const settingsMenu = document.getElementById("settings-menu");
+const qualityContainer = document.getElementById("quality-options");
+const qualityLoader = document.getElementById("quality-loader");
+const resumeModal = document.getElementById("resume-modal");
+const resumeText = document.getElementById("resume-text");
+const btnContinue = document.getElementById("btn-continue");
+const btnRestart = document.getElementById("btn-restart");
+
+// Leer parámetros de la URL
+const params = new URLSearchParams(window.location.search);
+let VIDEO_URL = params.get('video') ? decodeURIComponent(params.get('video')) : '';
+let POSTER_URL = params.get('poster') ? decodeURIComponent(params.get('poster')) : '';
+let TITLE = params.get('title') ? decodeURIComponent(params.get('title')) : 'Reproduciendo';
+
+// Clave única para guardar progreso (basada en la URL del video)
+const STORAGE_KEY = `lzplayer_resume_${btoa(VIDEO_URL || 'unknown').replace(/[^a-zA-Z0-9]/g, '').slice(0, 50)}`;
+
+let hlsInstance = null;
+let hasStarted = false;
+let isChangingQuality = false;
+let saveInterval = null;
+
+/* FORMATO HH:MM:SS */
+function formatTime(seconds) {
+    if (!seconds || isNaN(seconds)) return "00:00:00";
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    return `${h}:${m < 10 ? "0" + m : m}:${s < 10 ? "0" + s : s}`;
+}
+
+/* ACTUALIZAR TIEMPO TOTAL */
+function updateTotalTime() {
+    if (video.duration && !isNaN(video.duration)) {
+        totalTimeEl.textContent = formatTime(video.duration);
+    }
+}
+
+/* GUARDAR PROGRESO */
+function saveProgress() {
+    if (video.currentTime > 5 && VIDEO_URL) {
+        localStorage.setItem(STORAGE_KEY, video.currentTime);
+    }
+}
+
+/* CARGAR PROGRESO */
+function loadSavedProgress() {
+    if (!VIDEO_URL) return;
+    
+    const savedTime = parseFloat(localStorage.getItem(STORAGE_KEY));
+   
+    if (savedTime && savedTime > 10) {
+        resumeText.innerHTML = `Te quedaste en <strong>${formatTime(savedTime)}</strong>.<br>¿Quieres continuar desde ahí?`;
+        resumeModal.classList.add("show");
+        
+        btnContinue.onclick = () => {
+            video.currentTime = savedTime;
+            resumeModal.classList.remove("show");
+            hideBackdropAndShowVideo();
+            hasStarted = true;
+            video.play();
+        };
+        
+        btnRestart.onclick = () => {
+            localStorage.removeItem(STORAGE_KEY);
+            resumeModal.classList.remove("show");
+            hideBackdropAndShowVideo();
+            hasStarted = true;
+            video.play();
+        };
+    }
+}
+
+/* CARGAR METADATOS DESDE URL */
+function loadMetadata() {
+    titleEl.textContent = TITLE || "Reproduciendo";
+    
+    if (POSTER_URL) {
+        backdropOverlay.style.backgroundImage = 
+            `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url('${POSTER_URL}')`;
+    } else {
+        backdropOverlay.style.background = '#111';
+    }
+    
+    if (VIDEO_URL) {
+        loadVideo(VIDEO_URL);
+    } else {
+        titleEl.textContent = "Error: No se proporcionó URL de video";
+        alert("No se encontró el enlace del video en la URL.");
+    }
+}
+
+/* CARGAR VIDEO (HLS o directo) */
+function loadVideo(url) {
+    if (url.includes(".m3u8") && Hls.isSupported()) {
+        hlsInstance = new Hls({ 
+            enableWorker: true, 
+            lowLatencyMode: true,
+            backBufferLength: 90
+        });
+        hlsInstance.loadSource(url);
+        hlsInstance.attachMedia(video);
+    } else {
+        video.src = url;
+    }
+}
+
+/* EVENTOS LOADER DE CALIDAD */
+video.addEventListener("waiting", () => {
+    if (isChangingQuality) qualityLoader.classList.add("show");
+});
+
+video.addEventListener("playing", () => {
+    if (isChangingQuality) {
+        qualityLoader.classList.remove("show");
+        isChangingQuality = false;
+    }
+});
+
+/* GUARDAR PROGRESO CADA SEGUNDO */
+video.addEventListener("timeupdate", () => {
+    if (!saveInterval && video.duration) {
+        saveInterval = setInterval(saveProgress, 1000);
+    }
+});
+
+/* OCULTAR BACKDROP Y MOSTRAR VIDEO */
+function hideBackdropAndShowVideo() {
+    if (backdropOverlay) {
+        backdropOverlay.style.transition = "opacity 0.6s ease";
+        backdropOverlay.style.opacity = "0";
+        setTimeout(() => {
+            if (backdropOverlay) backdropOverlay.style.display = "none";
+        }, 600);
+    }
+    video.style.transition = "opacity 0.6s ease";
+    video.style.opacity = "1";
+}
+
+/* CONTROLES */
+function togglePlay() {
+    if (video.paused) {
+        if (!hasStarted) {
+            hideBackdropAndShowVideo();
+            hasStarted = true;
+        }
+        video.play().catch(() => {});
+    } else {
+        video.pause();
+    }
+}
+
+function rewind() { 
+    video.currentTime = Math.max(0, video.currentTime - 10); 
+}
+
+function forward() { 
+    video.currentTime = Math.min(video.duration || 0, video.currentTime + 10); 
+}
+
+function fullscreen() {
+    const el = document.getElementById("player");
+    if (!document.fullscreenElement) {
+        el.requestFullscreen?.().catch(() => {});
+    } else {
+        document.exitFullscreen?.();
+    }
+}
+
+function goBack() {
+    window.location.href = "index.html";
+}
+
+/* MENÚ CONFIGURACIÓN */
+settingsBtn.addEventListener("click", (e) => {
+    e.stopImmediatePropagation();
+    settingsMenu.classList.toggle("show");
+    if (settingsMenu.classList.contains("show") && hlsInstance) {
+        loadQualityOptions();
+    }
+});
+
+document.addEventListener("click", (e) => {
+    if (!settingsMenu.contains(e.target) && e.target !== settingsBtn) {
+        settingsMenu.classList.remove("show");
+    }
+});
+
+/* OPCIONES DE CALIDAD */
+function loadQualityOptions() {
+    qualityContainer.innerHTML = "";
+    
+    if (!hlsInstance || !hlsInstance.levels.length) {
+        qualityContainer.innerHTML = `<div class="quality-option">No hay calidades disponibles</div>`;
+        return;
+    }
+    
+    let bestLevelIndex = 0;
+    let maxHeight = 0;
+    
+    hlsInstance.levels.forEach((level, i) => {
+        if (level.height > maxHeight) { 
+            maxHeight = level.height; 
+            bestLevelIndex = i; 
+        }
+    });
+    
+    // Opción Auto
+    const autoOption = createQualityOption("Auto (Recomendado)", -1, hlsInstance.currentLevel === -1);
+    qualityContainer.appendChild(autoOption);
+    
+    // Opciones de calidad ordenadas
+    const sortedLevels = [...hlsInstance.levels]
+        .map((level, index) => ({...level, originalIndex: index}))
+        .sort((a, b) => b.height - a.height);
+    
+    sortedLevels.forEach((level) => {
+        const label = `${level.height}p`;
+        const isActive = hlsInstance.currentLevel === level.originalIndex;
+        const isRecommended = level.originalIndex === bestLevelIndex;
+        const option = createQualityOption(label, level.originalIndex, isActive, isRecommended);
+        qualityContainer.appendChild(option);
+    });
+}
+
+function createQualityOption(label, levelIndex, isActive, isRecommended = false) {
+    const div = document.createElement("div");
+    div.className = `quality-option ${isActive ? "active" : ""}`;
+    
+    let html = label;
+    if (isRecommended) html += `<span class="recommended">Recomendada</span>`;
+    if (isActive) html += `<i class="fas fa-check check"></i>`;
+    
+    div.innerHTML = html;
+    
+    div.addEventListener("click", () => {
+        if (!hlsInstance) return;
+        
+        isChangingQuality = true;
+        qualityLoader.classList.add("show");
+        settingsMenu.classList.remove("show");
+        
+        hlsInstance.currentLevel = levelIndex;
+        
+        setTimeout(() => {
+            if (isChangingQuality) {
+                qualityLoader.classList.remove("show");
+                isChangingQuality = false;
+            }
+        }, 12000);
+    });
+    
+    return div;
+}
+
+/* EVENTOS DEL VIDEO */
+video.addEventListener("play", () => {
+    playBtn.className = "fas fa-pause btn big";
+});
+
+video.addEventListener("pause", () => {
+    playBtn.className = "fas fa-play btn big";
+});
+
+video.addEventListener("timeupdate", () => {
+    const c = video.currentTime;
+    const t = video.duration;
+    
+    if (!isNaN(t) && t > 0) {
+        seek.value = (c / t) * 100;
+        currentTimeEl.textContent = formatTime(c);
+    }
+});
+
+seek.addEventListener("input", () => {
+    if (video.duration) {
+        video.currentTime = (seek.value / 100) * video.duration;
+    }
+});
+
+/* ATAJOS DE TECLADO */
+document.addEventListener("keydown", (e) => {
+    if (e.target.tagName === "INPUT") return;
+    
+    if (e.code === "Space") { 
+        e.preventDefault(); 
+        togglePlay(); 
+    }
+    if (e.code === "ArrowLeft") rewind();
+    if (e.code === "ArrowRight") forward();
+    if (e.code === "KeyF") fullscreen();
+    if (e.code === "Escape" && document.fullscreenElement) {
+        document.exitFullscreen();
+    }
+});
+
+/* AUTO OCULTAR CONTROLES */
+let hideTimeout;
+
+function showControls() {
+    controls.classList.remove("hide");
+    clearTimeout(hideTimeout);
+    hideTimeout = setTimeout(() => { 
+        if (!video.paused) controls.classList.add("hide"); 
+    }, 3500);
+}
+
+document.addEventListener("mousemove", showControls);
+document.addEventListener("touchstart", showControls);
+video.addEventListener("click", togglePlay);
+
+/* INICIALIZACIÓN */
+function initPlayer() {
+    loadMetadata();
+    
+    // Cuando el video tenga metadata
+    video.addEventListener("loadedmetadata", () => {
+        updateTotalTime();
+        loadSavedProgress();
+    });
+    
+    video.addEventListener("durationchange", updateTotalTime);
+    
+    // Si ya hay duración disponible
+    if (video.duration) {
+        updateTotalTime();
+    }
+}
+
+initPlayer();
+</script>
+</body>
+</html>
