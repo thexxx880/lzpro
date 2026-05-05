@@ -10,508 +10,61 @@
     --primary: #00d4ff;
     --bg: #0f0f0f;
     --card: #1a1a1a;
-    --card-hover: #252525;
 }
-
 * { box-sizing: border-box; }
-
-body {
-    margin: 0;
-    background: var(--bg);
-    color: #fff;
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-}
-
-.container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
-
-/* NAVBAR */
-nav {
-    background: #111;
-    padding: 18px 0;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    border-bottom: 1px solid #222;
-}
-
-.nav-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
-
-.logo {
-    font-size: 26px;
-    font-weight: 800;
-    color: var(--primary);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.logo i { font-size: 28px; }
-
-/* HERO */
-.hero {
-    text-align: center;
-    padding: 60px 20px 40px;
-    background: linear-gradient(#0f0f0f, #111);
-}
-
-.hero h1 {
-    font-size: 42px;
-    margin: 0 0 12px;
-    font-weight: 800;
-}
-
-.hero p {
-    color: #aaa;
-    font-size: 18px;
-    max-width: 500px;
-    margin: 0 auto;
-}
-
-/* SECCIÓN AGREGAR */
-.add-section {
-    background: var(--card);
-    border-radius: 16px;
-    padding: 30px;
-    margin-bottom: 40px;
-    border: 1px solid #222;
-}
-
-.add-section h2 {
-    margin: 0 0 20px;
-    font-size: 22px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.search-box {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 20px;
-}
-
-.search-box input {
-    flex: 1;
-    padding: 14px 20px;
-    border: 2px solid #333;
-    border-radius: 12px;
-    background: #111;
-    color: #fff;
-    font-size: 16px;
-    outline: none;
-}
-
-.search-box input:focus {
-    border-color: var(--primary);
-}
-
-.search-box button {
-    padding: 0 30px;
-    background: var(--primary);
-    color: #000;
-    border: none;
-    border-radius: 12px;
-    font-weight: 700;
-    font-size: 15px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.search-box button:hover {
-    background: #00b8e6;
-}
-
-.search-results {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 15px;
-    margin-top: 20px;
-}
-
-.search-card {
-    background: #111;
-    border-radius: 12px;
-    overflow: hidden;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    border: 1px solid #222;
-}
-
-.search-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 30px rgba(0, 212, 255, 0.1);
-}
-
-.search-card img {
-    width: 100%;
-    height: 220px;
-    object-fit: cover;
-    display: block;
-}
-
-.search-card .info {
-    padding: 12px;
-}
-
-.search-card .title {
-    font-weight: 600;
-    font-size: 14px;
-    line-height: 1.3;
-    margin-bottom: 4px;
-}
-
-.search-card .year {
-    color: #888;
-    font-size: 13px;
-}
-
-/* FORMULARIO AGREGAR */
-.add-form {
-    margin-top: 25px;
-    padding-top: 25px;
-    border-top: 1px solid #333;
-}
-
-.add-form h3 {
-    margin: 0 0 15px;
-    font-size: 18px;
-    color: #ccc;
-}
-
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    margin-bottom: 15px;
-}
-
-@media (max-width: 768px) {
-    .form-row { grid-template-columns: 1fr; }
-}
-
-.input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.input-group label {
-    font-size: 13px;
-    color: #aaa;
-    font-weight: 500;
-}
-
-.input-group input {
-    padding: 12px 16px;
-    border: 2px solid #333;
-    border-radius: 10px;
-    background: #111;
-    color: #fff;
-    font-size: 15px;
-}
-
-.input-group input:focus {
-    border-color: var(--primary);
-    outline: none;
-}
-
-.btn-primary {
-    background: var(--primary);
-    color: #000;
-    border: none;
-    padding: 14px 32px;
-    border-radius: 12px;
-    font-weight: 700;
-    font-size: 15px;
-    cursor: pointer;
-    transition: all 0.2s;
-    width: 100%;
-    margin-top: 10px;
-}
-
-.btn-primary:hover {
-    background: #00b8e6;
-}
-
-/* MI BIBLIOTECA */
-.library-section h2 {
-    font-size: 24px;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.library-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 20px;
-}
-
-.library-card {
-    position: relative;
-    aspect-ratio: 16 / 9;
-    border-radius: 14px;
-    overflow: hidden;
-    cursor: pointer;
-    background: #222;
-    border: 1px solid #333;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.library-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-}
-
-.library-card .backdrop {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.4s ease;
-}
-
-.library-card:hover .backdrop {
-    transform: scale(1.08);
-}
-
-.library-card .overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.85) 75%);
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    padding: 18px;
-}
-
-.library-card .title {
-    font-size: 17px;
-    font-weight: 700;
-    line-height: 1.2;
-    margin-bottom: 4px;
-}
-
-.library-card .play-icon {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 58px;
-    height: 58px;
-    background: rgba(0, 212, 255, 0.9);
-    color: #000;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    opacity: 0;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
-}
-
-.library-card:hover .play-icon {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.1);
-}
-
-.library-card .delete-btn {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    width: 34px;
-    height: 34px;
-    background: rgba(0,0,0,0.7);
-    border: none;
-    color: #fff;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    opacity: 0;
-    transition: all 0.2s;
-    z-index: 2;
-}
-
-.library-card:hover .delete-btn {
-    opacity: 1;
-}
-
-.library-card .delete-btn:hover {
-    background: #e63946;
-}
-
-/* EMPTY STATE */
-.empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: #666;
-}
-
-.empty-state i {
-    font-size: 52px;
-    margin-bottom: 20px;
-    color: #444;
-}
-
-.empty-state h3 {
-    color: #aaa;
-    margin-bottom: 8px;
-}
-
-/* MODAL */
-.modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.85);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 200;
-}
-
-.modal.show {
-    display: flex;
-}
-
-.modal-content {
-    background: #1a1a1a;
-    border-radius: 16px;
-    width: 100%;
-    max-width: 480px;
-    padding: 30px;
-    border: 1px solid #333;
-}
-
-.modal-content h3 {
-    margin: 0 0 20px;
-    font-size: 22px;
-}
-
-.modal-content .movie-info {
-    display: flex;
-    gap: 18px;
-    margin-bottom: 25px;
-}
-
-.modal-content .movie-info img {
-    width: 90px;
-    height: 130px;
-    object-fit: cover;
-    border-radius: 10px;
-}
-
-.modal-content .movie-details h4 {
-    margin: 0 0 8px;
-    font-size: 20px;
-}
-
-.modal-content .movie-details p {
-    color: #aaa;
-    font-size: 14px;
-    line-height: 1.5;
-}
-
-.modal-actions {
-    display: flex;
-    gap: 12px;
-}
-
-.modal-actions button {
-    flex: 1;
-    padding: 14px;
-    border-radius: 10px;
-    font-weight: 600;
-    cursor: pointer;
-    font-size: 15px;
-}
-
-.btn-cancel {
-    background: #333;
-    color: #fff;
-    border: none;
-}
-
-.btn-add {
-    background: var(--primary);
-    color: #000;
-    border: none;
-}
-
-.toast {
-    position: fixed;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #222;
-    color: #fff;
-    padding: 14px 28px;
-    border-radius: 50px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-    display: none;
-    align-items: center;
-    gap: 10px;
-    z-index: 300;
-}
-
-.toast.show {
-    display: flex;
-}
+body { margin: 0; background: var(--bg); color: #fff; font-family: 'Segoe UI', system-ui, sans-serif; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+nav { background: #111; padding: 18px 0; border-bottom: 1px solid #222; }
+.nav-content { display: flex; align-items: center; justify-content: space-between; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+.logo { font-size: 26px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 10px; }
+.hero { text-align: center; padding: 50px 20px 30px; }
+.hero h1 { font-size: 38px; margin: 0 0 10px; }
+.add-section { background: var(--card); border-radius: 16px; padding: 30px; margin-bottom: 30px; border: 1px solid #222; }
+.search-box { display: flex; gap: 12px; margin-bottom: 20px; }
+.search-box input { flex: 1; padding: 14px 20px; border: 2px solid #333; border-radius: 12px; background: #111; color: #fff; font-size: 16px; }
+.search-box button { padding: 0 30px; background: var(--primary); color: #000; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; }
+.search-results { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
+.search-card { background: #111; border-radius: 12px; overflow: hidden; cursor: pointer; transition: transform .2s; border: 1px solid #222; }
+.search-card:hover { transform: translateY(-4px); }
+.search-card img { width: 100%; height: 200px; object-fit: cover; }
+.add-form { margin-top: 25px; padding-top: 25px; border-top: 1px solid #333; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+@media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } }
+.input-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.input-group label { font-size: 13px; color: #aaa; }
+.input-group input { padding: 12px 16px; border: 2px solid #333; border-radius: 10px; background: #111; color: #fff; font-size: 15px; }
+.btn-primary { background: var(--primary); color: #000; border: none; padding: 14px 32px; border-radius: 12px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 10px; }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 200; }
+.modal.show { display: flex; }
+.modal-content { background: #1a1a1a; border-radius: 16px; width: 100%; max-width: 480px; padding: 30px; border: 1px solid #333; }
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; padding: 14px 28px; border-radius: 50px; display: none; z-index: 300; }
+.toast.show { display: flex; }
 </style>
 </head>
 <body>
 
-<!-- NAVBAR -->
 <nav>
     <div class="nav-content">
-        <div class="logo">
-            <i class="fas fa-play-circle"></i>
-            <span>LzPlayer <strong>PRO</strong></span>
-        </div>
-        <div style="color:#888; font-size:14px;">
-            Tu reproductor personal
-        </div>
+        <div class="logo"><i class="fas fa-play-circle"></i> <span>LzPlayer <strong>PRO</strong></span></div>
     </div>
 </nav>
 
 <div class="container">
-
-    <!-- HERO -->
     <div class="hero">
-        <h1>Bienvenido a <span style="color:var(--primary)">LzPlayer PRO</span></h1>
-        <p>Busca películas en TMDB, agrega tus enlaces de video y reproduce en alta calidad.</p>
+        <h1>Agregar nuevo contenido</h1>
+        <p>Busca en TMDB o agrega manualmente tus enlaces de video</p>
     </div>
 
     <!-- AGREGAR CONTENIDO -->
     <div class="add-section">
-        <h2><i class="fas fa-plus-circle" style="color:var(--primary)"></i> Agregar nuevo contenido</h2>
+        <h2><i class="fas fa-plus-circle" style="color:var(--primary)"></i> Agregar contenido</h2>
         
-        <!-- Buscador TMDB -->
         <div class="search-box">
-            <input type="text" id="search-input" placeholder="Buscar película en TMDB (ej: Inception, Dune, etc.)" 
-                   onkeyup="if (event.key === 'Enter') searchTMDB()">
-            <button onclick="searchTMDB()">
-                <i class="fas fa-search"></i> Buscar
-            </button>
+            <input type="text" id="search-input" placeholder="Buscar película en TMDB..." onkeyup="if (event.key === 'Enter') searchTMDB()">
+            <button onclick="searchTMDB()"><i class="fas fa-search"></i> Buscar</button>
         </div>
-
-        <!-- Resultados de búsqueda -->
         <div id="search-results" class="search-results"></div>
 
-        <!-- Formulario manual -->
         <div class="add-form">
             <h3>O agregar manualmente</h3>
             <div class="form-row">
@@ -521,338 +74,196 @@ nav {
                 </div>
                 <div class="input-group">
                     <label>URL del Backdrop / Poster</label>
-                    <input type="text" id="manual-poster" placeholder="https://image.tmdb.org/t/p/original/....jpg">
+                    <input type="text" id="manual-poster" placeholder="https://image.tmdb.org/...">
                 </div>
             </div>
             <div class="input-group">
-                <label>URL del Video (HLS .m3u8 recomendado)</label>
-                <input type="text" id="manual-video" placeholder="https://ejemplo.com/video.m3u8">
+                <label>URL del Video (.m3u8 recomendado)</label>
+                <input type="text" id="manual-video" placeholder="https://tu-servidor.com/video.m3u8">
             </div>
-            <button class="btn-primary" onclick="addManualContent()">
-                <i class="fas fa-save"></i> Guardar en mi biblioteca
-            </button>
+            <button class="btn-primary" onclick="addManualContent()">Guardar y agregar al historial</button>
         </div>
     </div>
 
-    <!-- MI BIBLIOTECA -->
-    <div class="library-section">
-        <h2><i class="fas fa-film"></i> Mi Biblioteca</h2>
-        <div id="library-grid" class="library-grid"></div>
+    <!-- NOTA -->
+    <div style="background:#1a1a1a; border-radius:12px; padding:22px 26px; margin-top:10px; border:1px solid #333;">
+        <p style="margin:0; color:#aaa; font-size:14.5px;">
+            <i class="fas fa-info-circle" style="color:var(--primary); margin-right:8px;"></i>
+            El historial de los últimos <strong>15 videos reproducidos</strong> se muestra directamente desde el reproductor 
+            (botón <i class="fas fa-history"></i> en la esquina superior izquierda).
+        </p>
     </div>
 
+    <!-- URL GENERADA (para copiar) -->
+    <div id="generated-url-box" style="display:none; background:#1f2a2f; border:2px solid #00d4ff; border-radius:14px; padding:22px 26px; margin-bottom:40px;">
+        <p style="margin:0 0 12px; color:#00d4ff; font-weight:700; font-size:15px;">
+            <i class="fas fa-link"></i> URL lista para usar / compartir:
+        </p>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <input type="text" id="generated-url" readonly 
+                   style="flex:1; min-width:280px; padding:13px 16px; background:#111; border:1px solid #444; border-radius:10px; color:#fff; font-size:14px; font-family:monospace;">
+            <button onclick="copyGeneratedUrl()" 
+                    style="padding:13px 26px; background:#00d4ff; color:#000; border:none; border-radius:10px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px; white-space:nowrap;">
+                <i class="fas fa-copy"></i> <span>Copiar URL</span>
+            </button>
+        </div>
+        <small style="color:#777; display:block; margin-top:10px;">Esta URL abre directamente el reproductor con el video.</small>
+    </div>
 </div>
 
-<!-- MODAL AGREGAR DESDE BÚSQUEDA -->
+<!-- Modal -->
 <div id="add-modal" class="modal">
     <div class="modal-content">
         <h3>Agregar a la biblioteca</h3>
-        
-        <div class="movie-info">
-            <img id="modal-poster" alt="Poster">
-            <div class="movie-details">
-                <h4 id="modal-title"></h4>
-                <p id="modal-year"></p>
+        <div style="display:flex; gap:18px; margin-bottom:20px;">
+            <img id="modal-poster" style="width:90px; height:130px; object-fit:cover; border-radius:10px;">
+            <div>
+                <h4 id="modal-title" style="margin:0 0 8px;"></h4>
+                <p id="modal-year" style="color:#aaa; margin:0;"></p>
             </div>
         </div>
-
-        <div class="input-group" style="margin-bottom: 20px;">
+        <div class="input-group">
             <label>URL del Video (obligatorio)</label>
-            <input type="text" id="modal-video-url" placeholder="https://tu-servidor.com/video.m3u8">
+            <input type="text" id="modal-video-url" placeholder="https://...m3u8">
         </div>
-
-        <div class="modal-actions">
-            <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
-            <button class="btn-add" onclick="confirmAddFromSearch()">Agregar a biblioteca</button>
+        <div style="display:flex; gap:12px; margin-top:20px;">
+            <button onclick="closeModal()" style="flex:1; padding:14px; background:#333; color:#fff; border:none; border-radius:10px;">Cancelar</button>
+            <button onclick="confirmAddFromSearch()" style="flex:1; padding:14px; background:var(--primary); color:#000; border:none; border-radius:10px; font-weight:700;">Agregar</button>
         </div>
     </div>
 </div>
 
-<!-- TOAST -->
-<div id="toast" class="toast">
-    <i class="fas fa-check-circle" style="color:#00d4ff"></i>
-    <span id="toast-text">Contenido agregado correctamente</span>
-</div>
+<div id="toast" class="toast"><i class="fas fa-check-circle" style="color:#00d4ff"></i> <span id="toast-text"></span></div>
 
 <script>
-// ==================== CONFIGURACIÓN ====================
 const TMDB_API_KEY = "38e497c6c1a043d1341416e80915669f";
-const LIBRARY_KEY = "lzplayer_library";
-
-// ==================== VARIABLES GLOBALES ====================
 let currentSearchResult = null;
-let library = [];
 
-// ==================== CARGAR BIBLIOTECA ====================
-function loadLibrary() {
-    const saved = localStorage.getItem(LIBRARY_KEY);
-    library = saved ? JSON.parse(saved) : [];
-    renderLibrary();
-}
-
-// ==================== GUARDAR BIBLIOTECA ====================
-function saveLibrary() {
-    localStorage.setItem(LIBRARY_KEY, JSON.stringify(library));
-}
-
-// ==================== MOSTRAR TOAST ====================
-function showToast(message) {
+function showToast(msg) {
     const toast = document.getElementById("toast");
-    document.getElementById("toast-text").textContent = message;
+    document.getElementById("toast-text").textContent = msg;
     toast.classList.add("show");
-    
-    setTimeout(() => {
-        toast.classList.remove("show");
-    }, 2800);
+    setTimeout(() => toast.classList.remove("show"), 2600);
 }
 
-// ==================== BUSCAR EN TMDB ====================
 async function searchTMDB() {
-    const query = document.getElementById("search-input").value.trim();
-    if (!query) return;
-
-    const resultsContainer = document.getElementById("search-results");
-    resultsContainer.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:20px; color:#666;">Buscando...</div>`;
-
+    const q = document.getElementById("search-input").value.trim();
+    if (!q) return;
+    const container = document.getElementById("search-results");
+    container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:#666;">Buscando...</div>`;
+    
     try {
-        const res = await fetch(
-            `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&language=es-MX&page=1`
-        );
+        const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(q)}&language=es-MX`);
         const data = await res.json();
-
-        resultsContainer.innerHTML = "";
-
-        if (!data.results || data.results.length === 0) {
-            resultsContainer.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#888; padding:20px;">No se encontraron resultados.</div>`;
-            return;
-        }
-
-        data.results.slice(0, 12).forEach(movie => {
+        container.innerHTML = "";
+        if (!data.results?.length) { container.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:#888;">Sin resultados</div>`; return; }
+        
+        data.results.slice(0,10).forEach(m => {
             const card = document.createElement("div");
             card.className = "search-card";
-            
-            const poster = movie.poster_path 
-                ? `https://image.tmdb.org/t/p/w342${movie.poster_path}`
-                : "https://via.placeholder.com/342x513/222/555?text=Sin+imagen";
-            
-            const year = movie.release_date ? movie.release_date.substring(0, 4) : "—";
-
-            card.innerHTML = `
-                <img src="${poster}" alt="${movie.title}">
-                <div class="info">
-                    <div class="title">${movie.title}</div>
-                    <div class="year">${year}</div>
-                </div>
-            `;
-
-            card.onclick = () => openAddModal(movie);
-            resultsContainer.appendChild(card);
+            const poster = m.poster_path ? `https://image.tmdb.org/t/p/w342${m.poster_path}` : "https://via.placeholder.com/342x513/222/555?text=Sin+imagen";
+            card.innerHTML = `<img src="${poster}"><div style="padding:10px 12px;"><div style="font-weight:600;font-size:14px;">${m.title}</div><div style="color:#888;font-size:12px;">${m.release_date?.substring(0,4) || ""}</div></div>`;
+            card.onclick = () => openAddModal(m);
+            container.appendChild(card);
         });
-
-    } catch (error) {
-        resultsContainer.innerHTML = `<div style="grid-column:1/-1; color:#e63946; text-align:center;">Error al buscar. Intenta de nuevo.</div>`;
-    }
+    } catch { container.innerHTML = `<div style="color:#e63946;text-align:center;">Error al buscar</div>`; }
 }
 
-// ==================== ABRIR MODAL PARA AGREGAR ====================
 function openAddModal(movie) {
     currentSearchResult = movie;
-
     document.getElementById("modal-title").textContent = movie.title;
-    document.getElementById("modal-year").textContent = movie.release_date 
-        ? `Año: ${movie.release_date.substring(0, 4)}` 
-        : "Año desconocido";
-
-    const posterImg = document.getElementById("modal-poster");
-    posterImg.src = movie.poster_path 
-        ? `https://image.tmdb.org/t/p/w342${movie.poster_path}`
-        : "https://via.placeholder.com/342x513/222/555?text=Sin+imagen";
-
+    document.getElementById("modal-year").textContent = movie.release_date ? `Año: ${movie.release_date.substring(0,4)}` : "";
+    document.getElementById("modal-poster").src = movie.poster_path ? `https://image.tmdb.org/t/p/w342${movie.poster_path}` : "https://via.placeholder.com/342x513/222/555?text=Sin+imagen";
     document.getElementById("modal-video-url").value = "";
     document.getElementById("add-modal").classList.add("show");
-    document.getElementById("modal-video-url").focus();
 }
 
 function closeModal() {
     document.getElementById("add-modal").classList.remove("show");
-    currentSearchResult = null;
 }
 
-// ==================== CONFIRMAR AGREGAR DESDE BÚSQUEDA ====================
 function confirmAddFromSearch() {
     if (!currentSearchResult) return;
-
-    const videoUrl = document.getElementById("modal-video-url").value.trim();
+    const url = document.getElementById("modal-video-url").value.trim();
+    if (!url) return alert("Ingresa la URL del video");
     
-    if (!videoUrl) {
-        alert("Por favor ingresa la URL del video.");
-        return;
-    }
+    const backdrop = currentSearchResult.backdrop_path 
+        ? `https://image.tmdb.org/t/p/original${currentSearchResult.backdrop_path}` 
+        : currentSearchResult.poster_path ? `https://image.tmdb.org/t/p/original${currentSearchResult.poster_path}` : "";
 
-    // Elegir backdrop (mejor calidad) o poster
-    let backdrop = currentSearchResult.backdrop_path 
-        ? `https://image.tmdb.org/t/p/original${currentSearchResult.backdrop_path}`
-        : currentSearchResult.poster_path 
-            ? `https://image.tmdb.org/t/p/original${currentSearchResult.poster_path}`
-            : "";
+    const item = { title: currentSearchResult.title, backdrop, videoUrl: url };
 
-    const newItem = {
-        id: Date.now(),
-        title: currentSearchResult.title,
-        backdrop: backdrop,
-        videoUrl: videoUrl,
-        addedAt: new Date().toISOString()
-    };
+    // Guardar en recientes
+    let recent = JSON.parse(localStorage.getItem("lzplayer_recent") || "[]");
+    recent = recent.filter(r => r.videoUrl !== item.videoUrl);
+    recent.unshift({ ...item, lastPlayed: new Date().toISOString() });
+    if (recent.length > 15) recent.length = 15;
+    localStorage.setItem("lzplayer_recent", JSON.stringify(recent));
 
-    library.unshift(newItem);
-    saveLibrary();
-    renderLibrary();
     closeModal();
-    showToast("¡Película agregada a tu biblioteca!");
+    showToast("¡Agregado! URL generada abajo");
+    showGeneratedUrl(item.videoUrl, item.backdrop, item.title);
     
-    // Limpiar búsqueda
     document.getElementById("search-input").value = "";
     document.getElementById("search-results").innerHTML = "";
 }
 
-// ==================== AGREGAR MANUALMENTE ====================
 function addManualContent() {
     const title = document.getElementById("manual-title").value.trim();
     const poster = document.getElementById("manual-poster").value.trim();
     const videoUrl = document.getElementById("manual-video").value.trim();
+    if (!title || !videoUrl) return alert("Título y URL del video son obligatorios");
 
-    if (!title || !videoUrl) {
-        alert("El título y la URL del video son obligatorios.");
-        return;
-    }
+    let recent = JSON.parse(localStorage.getItem("lzplayer_recent") || "[]");
+    recent = recent.filter(r => r.videoUrl !== videoUrl);
+    recent.unshift({ title, backdrop: poster, videoUrl, lastPlayed: new Date().toISOString() });
+    if (recent.length > 15) recent.length = 15;
+    localStorage.setItem("lzplayer_recent", JSON.stringify(recent));
 
-    const newItem = {
-        id: Date.now(),
-        title: title,
-        backdrop: poster || "",
-        videoUrl: videoUrl,
-        addedAt: new Date().toISOString()
-    };
-
-    library.unshift(newItem);
-    saveLibrary();
-    renderLibrary();
-
-    // Limpiar formulario
     document.getElementById("manual-title").value = "";
     document.getElementById("manual-poster").value = "";
     document.getElementById("manual-video").value = "";
 
-    showToast("Contenido agregado correctamente");
+    showToast("Contenido agregado. URL generada abajo");
+    showGeneratedUrl(videoUrl, poster, title);
 }
 
-// ==================== RENDERIZAR BIBLIOTECA ====================
-function renderLibrary() {
-    const grid = document.getElementById("library-grid");
-    grid.innerHTML = "";
-
-    if (library.length === 0) {
-        grid.innerHTML = `
-            <div class="empty-state" style="grid-column: 1 / -1;">
-                <i class="fas fa-film"></i>
-                <h3>Tu biblioteca está vacía</h3>
-                <p>Busca películas arriba o agrégalas manualmente.</p>
-            </div>
-        `;
-        return;
-    }
-
-    library.forEach(item => {
-        const card = document.createElement("div");
-        card.className = "library-card";
-
-        const backdropStyle = item.backdrop 
-            ? `background-image: url('${item.backdrop}')` 
-            : `background: linear-gradient(135deg, #222, #111)`;
-
-        card.innerHTML = `
-            <div class="backdrop" style="${backdropStyle}; background-size: cover; background-position: center;"></div>
-            
-            <div class="overlay">
-                <div class="title">${item.title}</div>
-            </div>
-            
-            <div class="play-icon">
-                <i class="fas fa-play"></i>
-            </div>
-            
-            <button class="delete-btn" title="Eliminar">
-                <i class="fas fa-trash"></i>
-            </button>
-        `;
-
-        // Click en la tarjeta → reproducir
-        card.onclick = (e) => {
-            if (!e.target.closest('.delete-btn')) {
-                playItem(item);
-            }
-        };
-
-        // Botón eliminar
-        card.querySelector(".delete-btn").onclick = (e) => {
-            e.stopImmediatePropagation();
-            if (confirm(`¿Eliminar "${item.title}" de tu biblioteca?`)) {
-                deleteItem(item.id);
-            }
-        };
-
-        grid.appendChild(card);
-    });
-}
-
-// ==================== REPRODUCIR ====================
-function playItem(item) {
+// ==================== GENERAR Y COPIAR URL ====================
+function generatePlayerUrl(videoUrl, poster, title) {
+    const base = window.location.origin + window.location.pathname.replace("index.html", "player.html");
     const params = new URLSearchParams();
-    params.set("video", item.videoUrl);
-    if (item.backdrop) params.set("poster", item.backdrop);
-    params.set("title", item.title);
-
-    window.location.href = `player.html?${params.toString()}`;
+    params.set("video", videoUrl);
+    if (poster) params.set("poster", poster);
+    if (title) params.set("title", title);
+    return `${base}?${params.toString()}`;
 }
 
-// ==================== ELIMINAR ====================
-function deleteItem(id) {
-    library = library.filter(item => item.id !== id);
-    saveLibrary();
-    renderLibrary();
-    showToast("Contenido eliminado");
+function showGeneratedUrl(videoUrl, poster, title) {
+    const box = document.getElementById("generated-url-box");
+    const input = document.getElementById("generated-url");
+    input.value = generatePlayerUrl(videoUrl, poster, title);
+    box.style.display = "block";
+    setTimeout(() => box.scrollIntoView({ behavior: "smooth", block: "center" }), 300);
 }
 
-// ==================== INICIALIZACIÓN ====================
-function init() {
-    loadLibrary();
-    
-    // Enter en búsqueda
-    const searchInput = document.getElementById("search-input");
-    searchInput.addEventListener("keypress", function(e) {
-        if (e.key === "Enter") {
-            searchTMDB();
+function copyGeneratedUrl() {
+    const input = document.getElementById("generated-url");
+    input.select();
+    navigator.clipboard.writeText(input.value).then(() => {
+        const btn = document.querySelector("#generated-url-box button");
+        if (btn) {
+            const original = btn.innerHTML;
+            btn.innerHTML = `<i class="fas fa-check"></i> Copiado`;
+            setTimeout(() => btn.innerHTML = original, 1800);
         }
+    }).catch(() => {
+        document.execCommand("copy");
+        alert("URL copiada");
     });
-
-    // Cerrar modal con Escape o click fuera
-    const modal = document.getElementById("add-modal");
-    modal.addEventListener("click", (e) => {
-        if (e.target === modal) closeModal();
-    });
-    
-    document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && modal.classList.contains("show")) {
-            closeModal();
-        }
-    });
-
-    // Mensaje de bienvenida si está vacío
-    if (library.length === 0) {
-        // Opcional: puedes mostrar un tooltip la primera vez
-    }
 }
 
-init();
+document.getElementById("add-modal").addEventListener("click", e => { if (e.target.id === "add-modal") closeModal(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
 </script>
 </body>
 </html>
