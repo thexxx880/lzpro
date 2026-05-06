@@ -6,7 +6,6 @@
 <title>LzPlayer PRO</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-<script disable-devtool-auto src='https://cdn.jsdelivr.net/npm/disable-devtool@latest'></script>
 <style>
 :root { --primary: #00d4ff; }
 body {
@@ -14,6 +13,7 @@ body {
 }
 #player {
     position: relative; width: 100%; height: 100vh; background: #000; overflow: hidden;
+    cursor: default;
 }
 #backdrop-overlay {
     position: absolute; inset: 0; z-index: 1;
@@ -77,7 +77,7 @@ video {
     transform: scale(0.85);
 }
 
-/* === ANIMACIÓN DE GIRO MÁS FUERTE === */
+/* === ANIMACIÓN DE GIRO === */
 .btn.rotate {
     animation: rotateIcon 0.45s ease forwards;
 }
@@ -88,7 +88,7 @@ video {
     100% { transform: rotate(0deg) scale(1); }
 }
 
-/* === ANIMACIÓN PLAY/PAUSA MEJORADA (más suave) === */
+/* === ANIMACIÓN PLAY/PAUSA SUAVE === */
 #playBtn {
     transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), 
                 color 0.25s ease,
@@ -118,7 +118,6 @@ video {
     position: relative;
 }
 
-/* === PREVIEW DE MINIATURA (SOLO EN PC) === */
 .seek-container {
     position: relative;
     flex: 1;
@@ -130,41 +129,6 @@ video {
     flex: 1;
     cursor: pointer;
     accent-color: var(--primary);
-}
-
-/* Contenedor de la miniatura */
-.seek-preview {
-    position: absolute;
-    bottom: 45px;
-    left: 0;
-    background: #111;
-    border: 2px solid #333;
-    border-radius: 8px;
-    padding: 6px;
-    display: none;
-    pointer-events: none;
-    z-index: 100;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.7);
-}
-
-.seek-preview.show {
-    display: block;
-}
-
-.seek-preview canvas {
-    width: 160px;
-    height: 90px;
-    border-radius: 4px;
-    background: #000;
-    display: block;
-}
-
-.seek-preview .time-label {
-    text-align: center;
-    font-size: 12px;
-    color: #ccc;
-    margin-top: 6px;
-    font-variant-numeric: tabular-nums;
 }
 
 .bottom span { 
@@ -288,7 +252,6 @@ video {
     .controls { padding: 18px 20px; }
     .settings-menu { right: 20px; min-width: 210px; }
     .resume-content { margin: 0 15px; padding: 25px; }
-    .seek-preview { display: none !important; } /* Ocultar preview en móviles */
 }
 </style>
 </head>
@@ -296,9 +259,6 @@ video {
 <div id="player">
     <div id="backdrop-overlay"></div>
     <video id="video" playsinline></video>
- 
-    <!-- Video oculto solo para generar miniaturas -->
-    <video id="preview-video" style="display:none;" playsinline></video>
  
     <div id="quality-loader" class="quality-loader">
         <div class="spinner"></div>
@@ -320,17 +280,7 @@ video {
       
         <div class="bottom">
             <span id="current">00:00:00</span>
-            
-            <div class="seek-container">
-                <input type="range" id="seek" value="0" min="0" max="100" step="0.1">
-                
-                <!-- Miniatura de preview (solo PC) -->
-                <div id="seek-preview" class="seek-preview">
-                    <canvas id="preview-canvas" width="160" height="90"></canvas>
-                    <div class="time-label" id="preview-time">00:00</div>
-                </div>
-            </div>
-            
+            <input type="range" id="seek" value="0" min="0" max="100" step="0.1">
             <span id="total">00:00:00</span>
             <i class="fas fa-cog btn" id="settingsBtn" title="Configuración"></i>
             <i class="fas fa-expand btn" onclick="fullscreen()" title="Pantalla completa"></i>
@@ -356,7 +306,6 @@ video {
 
 <script>
 const video = document.getElementById("video");
-const previewVideo = document.getElementById("preview-video");
 const playBtn = document.getElementById("playBtn");
 const rewindBtn = document.getElementById("rewindBtn");
 const forwardBtn = document.getElementById("forwardBtn");
@@ -375,11 +324,6 @@ const resumeText = document.getElementById("resume-text");
 const btnContinue = document.getElementById("btn-continue");
 const btnRestart = document.getElementById("btn-restart");
 
-const seekPreview = document.getElementById("seek-preview");
-const previewCanvas = document.getElementById("preview-canvas");
-const previewTimeEl = document.getElementById("preview-time");
-const ctx = previewCanvas.getContext("2d", { alpha: false });
-
 const params = new URLSearchParams(window.location.search);
 let VIDEO_URL = params.get('video') ? decodeURIComponent(params.get('video')) : '';
 let POSTER_URL = params.get('poster') ? decodeURIComponent(params.get('poster')) : '';
@@ -391,10 +335,6 @@ let hlsInstance = null;
 let hasStarted = false;
 let isChangingQuality = false;
 let saveInterval = null;
-let previewDebounce = null;
-
-// Detectar si es dispositivo táctil (móvil)
-const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
 function formatTime(seconds) {
     if (!seconds || isNaN(seconds)) return "00:00:00";
@@ -464,18 +404,8 @@ function loadVideo(url) {
         });
         hlsInstance.loadSource(url);
         hlsInstance.attachMedia(video);
-        
-        // Cargar también en el video de preview
-        const hlsPreview = new Hls({
-            enableWorker: true,
-            lowLatencyMode: true,
-            backBufferLength: 30
-        });
-        hlsPreview.loadSource(url);
-        hlsPreview.attachMedia(previewVideo);
     } else {
         video.src = url;
-        previewVideo.src = url;
     }
 }
 
@@ -507,7 +437,7 @@ function hideBackdropAndShowVideo() {
     video.style.opacity = "1";
 }
 
-/* === REWIND Y FORWARD CON GIRO FUERTE === */
+/* === REWIND Y FORWARD === */
 function rewind() {
     video.currentTime = Math.max(0, video.currentTime - 10);
     rewindBtn.style.setProperty('--rotate-deg', '-55deg');
@@ -522,7 +452,7 @@ function forward() {
     setTimeout(() => forwardBtn.classList.remove('rotate'), 450);
 }
 
-/* === PLAY/PAUSA CON TRANSICIÓN MÁS SUAVE === */
+/* === PLAY/PAUSA === */
 function togglePlay() {
     if (video.paused) {
         if (!hasStarted) {
@@ -545,16 +475,51 @@ function togglePlay() {
     }
 }
 
-function fullscreen() {
-    const el = document.getElementById("player");
+/* === FULLSCREEN MEJORADO === */
+function toggleFullscreen() {
+    const player = document.getElementById("player");
+    
     if (!document.fullscreenElement) {
-        el.requestFullscreen?.().catch(() => {});
+        // Entrar a fullscreen
+        if (player.requestFullscreen) {
+            player.requestFullscreen();
+        } else if (player.webkitRequestFullscreen) {
+            player.webkitRequestFullscreen();
+        } else if (player.msRequestFullscreen) {
+            player.msRequestFullscreen();
+        }
     } else {
-        document.exitFullscreen?.();
+        // Salir de fullscreen
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        }
     }
 }
 
-/* === ENGRANAJE QUE GIRA === */
+// Función legacy para el botón (mantiene compatibilidad)
+function fullscreen() {
+    toggleFullscreen();
+}
+
+/* === DOBLE CLIC EN CUALQUIER PARTE (EXCEPTO BOTONES) === */
+document.getElementById("player").addEventListener("dblclick", (e) => {
+    // Ignorar si el doble clic fue dentro de los controles o botones
+    if (e.target.closest(".controls") || 
+        e.target.closest(".btn") || 
+        e.target.closest("#settings-menu") ||
+        e.target.closest(".resume-modal")) {
+        return;
+    }
+    
+    // Si es doble clic en el video o en cualquier otra parte del player → fullscreen
+    toggleFullscreen();
+});
+
+/* === ENGRANAJE === */
 settingsBtn.addEventListener("click", (e) => {
     e.stopImmediatePropagation();
     settingsBtn.classList.add('rotating');
@@ -570,59 +535,6 @@ document.addEventListener("click", (e) => {
         settingsMenu.classList.remove("show");
     }
 });
-
-/* === PREVIEW SOLO EN PC (no en móviles) === */
-if (!isTouchDevice) {
-    seek.addEventListener("mousemove", (e) => {
-        if (!video.duration || previewVideo.readyState < 2) return;
-
-        const rect = seek.getBoundingClientRect();
-        const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-        const hoverTime = percent * video.duration;
-
-        seekPreview.style.display = "block";
-        seekPreview.classList.add("show");
-
-        const previewWidth = seekPreview.offsetWidth;
-        let leftPos = e.clientX - rect.left - (previewWidth / 2);
-        leftPos = Math.max(0, Math.min(leftPos, rect.width - previewWidth));
-        seekPreview.style.left = `${leftPos}px`;
-
-        previewTimeEl.textContent = formatTime(hoverTime);
-
-        clearTimeout(previewDebounce);
-        previewDebounce = setTimeout(() => {
-            generatePreviewThumbnail(hoverTime);
-        }, 60);
-    });
-
-    seek.addEventListener("mouseleave", () => {
-        seekPreview.classList.remove("show");
-        setTimeout(() => {
-            if (!seekPreview.classList.contains("show")) {
-                seekPreview.style.display = "none";
-            }
-        }, 180);
-    });
-}
-
-// Generar miniatura con el video oculto
-function generatePreviewThumbnail(time) {
-    if (!previewVideo.duration || previewVideo.readyState < 2) return;
-
-    previewVideo.currentTime = time;
-
-    setTimeout(() => {
-        try {
-            ctx.fillStyle = "#000";
-            ctx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
-            ctx.drawImage(previewVideo, 0, 0, previewCanvas.width, previewCanvas.height);
-        } catch (e) {
-            ctx.fillStyle = "#222";
-            ctx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
-        }
-    }, 50);
-}
 
 function loadQualityOptions() {
     qualityContainer.innerHTML = "";
@@ -706,7 +618,7 @@ document.addEventListener("keydown", (e) => {
     if (e.code === "Space") { e.preventDefault(); togglePlay(); }
     if (e.code === "ArrowLeft") rewind();
     if (e.code === "ArrowRight") forward();
-    if (e.code === "KeyF") fullscreen();
+    if (e.code === "KeyF") toggleFullscreen();
     if (e.code === "Escape" && document.fullscreenElement) {
         document.exitFullscreen();
     }
@@ -732,16 +644,14 @@ document.addEventListener("touchstart", (e) => {
 });
 video.addEventListener("click", togglePlay);
 
+/* DOBLE TOQUE EN MÓVIL */
 let lastTapTime = 0;
-video.addEventListener("dblclick", () => {
-    fullscreen();
-});
 video.addEventListener("touchend", (e) => {
     const currentTime = new Date().getTime();
     const tapLength = currentTime - lastTapTime;
     if (tapLength < 350 && tapLength > 0) {
         e.preventDefault();
-        fullscreen();
+        toggleFullscreen();
     }
     lastTapTime = currentTime;
 });
