@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>LzPlayer PRO</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="icon" href="data:,">
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <style>
 :root { --primary: #00d4ff; }
@@ -13,7 +14,6 @@ body {
 }
 #player {
     position: relative; width: 100%; height: 100vh; background: #000; overflow: hidden;
-    cursor: default;
 }
 #backdrop-overlay {
     position: absolute; inset: 0; z-index: 1;
@@ -40,103 +40,42 @@ video {
     gap: 12px;
 }
 .center { display: flex; justify-content: center; align-items: center; gap: 40px; }
+.btn { 
+    color: #fff; font-size: 26px; cursor: pointer; transition: all 0.2s ease; 
+    text-shadow: 0 2px 6px rgba(0,0,0,0.5); 
+}
+.btn:hover { color: var(--primary); transform: scale(1.15); }
+.btn.big { 
+    font-size: 68px; 
+    transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1); 
+}
+.btn:active { transform: scale(0.88); }
 
-/* === BOTONES CON ANIMACIÓN === */
-.btn {
-    color: #fff;
-    font-size: 26px;
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    text-shadow: 0 2px 6px rgba(0,0,0,0.5);
-    user-select: none;
+/* Animación especial para rewind y forward */
+.btn-rewind { animation: rotateRewind 400ms ease forwards; }
+.btn-forward { animation: rotateForward 400ms ease forwards; }
+
+@keyframes rotateRewind {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(-55deg); }
+}
+@keyframes rotateForward {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(55deg); }
 }
 
-.btn:hover {
-    color: var(--primary);
-    transform: scale(1.15);
+/* Engranaje que gira */
+.settings-btn-active {
+    animation: gearSpin 600ms ease;
+}
+@keyframes gearSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(180deg); }
 }
 
-.btn:active {
-    transform: scale(0.9);
-}
-
-/* Botón grande de Play/Pause */
-.btn.big {
-    font-size: 68px;
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
-                color 0.2s ease;
-    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.6));
-}
-
-.btn.big:hover {
-    transform: scale(1.15);
-    color: var(--primary);
-}
-
-.btn.big:active {
-    transform: scale(0.85);
-}
-
-/* === ANIMACIÓN DE GIRO === */
-.btn.rotate {
-    animation: rotateIcon 0.45s ease forwards;
-}
-
-@keyframes rotateIcon {
-    0%   { transform: rotate(0deg) scale(1); }
-    40%  { transform: rotate(var(--rotate-deg)) scale(1.15); }
-    100% { transform: rotate(0deg) scale(1); }
-}
-
-/* === ANIMACIÓN PLAY/PAUSA SUAVE === */
-#playBtn {
-    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), 
-                color 0.25s ease,
-                opacity 0.25s ease;
-}
-
-#playBtn.changing {
-    transform: scale(0.88);
-    opacity: 0.75;
-}
-
-/* Engranaje girando */
-#settingsBtn.rotating {
-    animation: rotateCog 0.5s ease forwards;
-}
-
-@keyframes rotateCog {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(180deg); }
-}
-
-.bottom { 
-    display: flex; 
-    align-items: center; 
-    gap: 12px; 
-    color: #fff; 
-    position: relative;
-}
-
-.seek-container {
-    position: relative;
-    flex: 1;
-    display: flex;
-    align-items: center;
-}
-
-#seek {
-    flex: 1;
-    cursor: pointer;
-    accent-color: var(--primary);
-}
-
-.bottom span { 
-    font-size: 13px; 
-    font-variant-numeric: tabular-nums; 
-    min-width: 60px; 
-    text-align: center; 
-}
+.bottom { display: flex; align-items: center; gap: 12px; color: #fff; }
+.bottom span { font-size: 13px; font-variant-numeric: tabular-nums; min-width: 60px; text-align: center; }
+input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
 
 /* MENÚ CONFIGURACIÓN */
 .settings-menu {
@@ -149,18 +88,10 @@ video {
 .settings-header { padding: 8px 18px; font-size: 14px; font-weight: 600; color: #aaa; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 6px; }
 .quality-option {
     padding: 11px 18px; font-size: 14px; color: #fff; cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex; align-items: center; gap: 10px;
+    transition: background 0.2s; display: flex; align-items: center; gap: 10px;
 }
-.quality-option:hover { 
-    background: rgba(255,255,255,0.08); 
-    transform: translateX(4px);
-}
-.quality-option.active { 
-    color: var(--primary); 
-    font-weight: 600; 
-    background: rgba(0, 212, 255, 0.1);
-}
+.quality-option:hover { background: rgba(255,255,255,0.08); }
+.quality-option.active { color: var(--primary); font-weight: 600; }
 .quality-option .check { margin-left: auto; color: var(--primary); }
 .quality-option .recommended {
     font-size: 11px; background: var(--primary); color: #000; padding: 1px 7px;
@@ -218,19 +149,14 @@ video {
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s ease;
 }
 #btn-continue {
     background: var(--primary);
     color: #000;
 }
 #btn-continue:hover {
-    background: #00e5ff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
-}
-#btn-continue:active {
-    transform: scale(0.95);
+    background: #00b8e6;
 }
 #btn-restart {
     background: #333;
@@ -238,10 +164,6 @@ video {
 }
 #btn-restart:hover {
     background: #444;
-    transform: translateY(-2px);
-}
-#btn-restart:active {
-    transform: scale(0.95);
 }
 
 /* RESPONSIVE */
@@ -283,7 +205,7 @@ video {
             <input type="range" id="seek" value="0" min="0" max="100" step="0.1">
             <span id="total">00:00:00</span>
             <i class="fas fa-cog btn" id="settingsBtn" title="Configuración"></i>
-            <i class="fas fa-expand btn" onclick="fullscreen()" title="Pantalla completa"></i>
+            <i class="fas fa-expand btn" id="fullscreenBtn" title="Pantalla completa"></i>
         </div>
     </div>
   
@@ -307,8 +229,6 @@ video {
 <script>
 const video = document.getElementById("video");
 const playBtn = document.getElementById("playBtn");
-const rewindBtn = document.getElementById("rewindBtn");
-const forwardBtn = document.getElementById("forwardBtn");
 const controls = document.getElementById("controls");
 const seek = document.getElementById("seek");
 const titleEl = document.getElementById("title-text");
@@ -323,6 +243,9 @@ const resumeModal = document.getElementById("resume-modal");
 const resumeText = document.getElementById("resume-text");
 const btnContinue = document.getElementById("btn-continue");
 const btnRestart = document.getElementById("btn-restart");
+const rewindBtn = document.getElementById("rewindBtn");
+const forwardBtn = document.getElementById("forwardBtn");
+const fullscreenBtn = document.getElementById("fullscreenBtn");
 
 const params = new URLSearchParams(window.location.search);
 let VIDEO_URL = params.get('video') ? decodeURIComponent(params.get('video')) : '';
@@ -336,6 +259,52 @@ let hasStarted = false;
 let isChangingQuality = false;
 let saveInterval = null;
 
+// ==================== FULLSCREEN ROBUSTO ====================
+const player = document.getElementById("player");
+
+function toggleFullscreen() {
+    if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+        if (player.requestFullscreen) player.requestFullscreen();
+        else if (player.webkitRequestFullscreen) player.webkitRequestFullscreen();
+        else if (player.msRequestFullscreen) player.msRequestFullscreen();
+    } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+        else if (document.msExitFullscreen) document.msExitFullscreen();
+    }
+}
+
+fullscreenBtn.addEventListener("click", (e) => {
+    e.stopImmediatePropagation();
+    toggleFullscreen();
+});
+
+player.addEventListener("dblclick", (e) => {
+    if (e.target.closest('.controls') || 
+        e.target.closest('.settings-menu') || 
+        e.target.closest('.resume-modal') || 
+        e.target.tagName === "INPUT") {
+        return;
+    }
+    toggleFullscreen();
+});
+
+document.addEventListener("keydown", (e) => {
+    if (e.code === "KeyF") {
+        e.preventDefault();
+        toggleFullscreen();
+    }
+});
+
+function updateFullscreenIcon() {
+    const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+    fullscreenBtn.className = isFullscreen ? "fas fa-compress btn" : "fas fa-expand btn";
+}
+document.addEventListener("fullscreenchange", updateFullscreenIcon);
+document.addEventListener("webkitfullscreenchange", updateFullscreenIcon);
+document.addEventListener("msfullscreenchange", updateFullscreenIcon);
+
+// ==================== FORMATO TIEMPO ====================
 function formatTime(seconds) {
     if (!seconds || isNaN(seconds)) return "00:00:00";
     const h = Math.floor(seconds / 3600);
@@ -382,26 +351,16 @@ function loadSavedProgress() {
 function loadMetadata() {
     titleEl.textContent = TITLE || "Reproduciendo";
     if (POSTER_URL) {
-        backdropOverlay.style.backgroundImage =
-            `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url('${POSTER_URL}')`;
+        backdropOverlay.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url('${POSTER_URL}')`;
     } else {
         backdropOverlay.style.background = '#111';
     }
-    if (VIDEO_URL) {
-        loadVideo(VIDEO_URL);
-    } else {
-        titleEl.textContent = "Error: No se proporcionó URL de video";
-        alert("No se encontró el enlace del video en la URL.");
-    }
+    if (VIDEO_URL) loadVideo(VIDEO_URL);
 }
 
 function loadVideo(url) {
     if (url.includes(".m3u8") && Hls.isSupported()) {
-        hlsInstance = new Hls({
-            enableWorker: true,
-            lowLatencyMode: true,
-            backBufferLength: 90
-        });
+        hlsInstance = new Hls({ enableWorker: true, lowLatencyMode: true, backBufferLength: 90 });
         hlsInstance.loadSource(url);
         hlsInstance.attachMedia(video);
     } else {
@@ -409,10 +368,8 @@ function loadVideo(url) {
     }
 }
 
-video.addEventListener("waiting", () => {
-    if (isChangingQuality) qualityLoader.classList.add("show");
-});
-video.addEventListener("playing", () => {
+video.addEventListener("waiting", () => { if (isChangingQuality) qualityLoader.classList.add("show"); });
+video.addEventListener("playing", () => { 
     if (isChangingQuality) {
         qualityLoader.classList.remove("show");
         isChangingQuality = false;
@@ -426,117 +383,52 @@ video.addEventListener("timeupdate", () => {
 });
 
 function hideBackdropAndShowVideo() {
-    if (backdropOverlay) {
-        backdropOverlay.style.transition = "opacity 0.6s ease";
-        backdropOverlay.style.opacity = "0";
-        setTimeout(() => {
-            if (backdropOverlay) backdropOverlay.style.display = "none";
-        }, 600);
-    }
+    backdropOverlay.style.transition = "opacity 0.6s ease";
+    backdropOverlay.style.opacity = "0";
+    setTimeout(() => { backdropOverlay.style.display = "none"; }, 600);
     video.style.transition = "opacity 0.6s ease";
     video.style.opacity = "1";
 }
 
-/* === REWIND Y FORWARD === */
-function rewind() {
-    video.currentTime = Math.max(0, video.currentTime - 10);
-    rewindBtn.style.setProperty('--rotate-deg', '-55deg');
-    rewindBtn.classList.add('rotate');
-    setTimeout(() => rewindBtn.classList.remove('rotate'), 450);
-}
-
-function forward() {
-    video.currentTime = Math.min(video.duration || 0, video.currentTime + 10);
-    forwardBtn.style.setProperty('--rotate-deg', '55deg');
-    forwardBtn.classList.add('rotate');
-    setTimeout(() => forwardBtn.classList.remove('rotate'), 450);
-}
-
-/* === PLAY/PAUSA === */
 function togglePlay() {
     if (video.paused) {
         if (!hasStarted) {
             hideBackdropAndShowVideo();
             hasStarted = true;
         }
-        playBtn.classList.add('changing');
-        setTimeout(() => {
-            playBtn.classList.remove('changing');
-            playBtn.className = "fas fa-pause btn big";
-        }, 180);
         video.play().catch(() => {});
     } else {
-        playBtn.classList.add('changing');
-        setTimeout(() => {
-            playBtn.classList.remove('changing');
-            playBtn.className = "fas fa-play btn big";
-        }, 180);
         video.pause();
     }
 }
 
-/* === FULLSCREEN MEJORADO === */
-function toggleFullscreen() {
-    const player = document.getElementById("player");
-    
-    if (!document.fullscreenElement) {
-        // Entrar a fullscreen
-        if (player.requestFullscreen) {
-            player.requestFullscreen();
-        } else if (player.webkitRequestFullscreen) {
-            player.webkitRequestFullscreen();
-        } else if (player.msRequestFullscreen) {
-            player.msRequestFullscreen();
-        }
-    } else {
-        // Salir de fullscreen
-        if (document.exitFullscreen) {
-            document.exitFullscreen();
-        } else if (document.webkitExitFullscreen) {
-            document.webkitExitFullscreen();
-        } else if (document.msExitFullscreen) {
-            document.msExitFullscreen();
-        }
-    }
+function rewind() {
+    rewindBtn.classList.add("btn-rewind");
+    setTimeout(() => rewindBtn.classList.remove("btn-rewind"), 450);
+    video.currentTime = Math.max(0, video.currentTime - 10);
 }
 
-// Función legacy para el botón (mantiene compatibilidad)
-function fullscreen() {
-    toggleFullscreen();
+function forward() {
+    forwardBtn.classList.add("btn-forward");
+    setTimeout(() => forwardBtn.classList.remove("btn-forward"), 450);
+    video.currentTime = Math.min(video.duration || 0, video.currentTime + 10);
 }
 
-/* === DOBLE CLIC EN CUALQUIER PARTE (EXCEPTO BOTONES) === */
-document.getElementById("player").addEventListener("dblclick", (e) => {
-    // Ignorar si el doble clic fue dentro de los controles o botones
-    if (e.target.closest(".controls") || 
-        e.target.closest(".btn") || 
-        e.target.closest("#settings-menu") ||
-        e.target.closest(".resume-modal")) {
-        return;
-    }
-    
-    // Si es doble clic en el video o en cualquier otra parte del player → fullscreen
-    toggleFullscreen();
-});
-
-/* === ENGRANAJE === */
 settingsBtn.addEventListener("click", (e) => {
     e.stopImmediatePropagation();
-    settingsBtn.classList.add('rotating');
-    setTimeout(() => settingsBtn.classList.remove('rotating'), 500);
     settingsMenu.classList.toggle("show");
-    if (settingsMenu.classList.contains("show") && hlsInstance) {
-        loadQualityOptions();
-    }
+    settingsBtn.classList.toggle("settings-btn-active");
+    if (settingsMenu.classList.contains("show") && hlsInstance) loadQualityOptions();
 });
 
 document.addEventListener("click", (e) => {
     if (!settingsMenu.contains(e.target) && e.target !== settingsBtn) {
         settingsMenu.classList.remove("show");
+        settingsBtn.classList.remove("settings-btn-active");
     }
 });
 
-function loadQualityOptions() {
+function loadQualityOptions() { /* mismo código de antes */ 
     qualityContainer.innerHTML = "";
     if (!hlsInstance || !hlsInstance.levels.length) {
         qualityContainer.innerHTML = `<div class="quality-option">No hay calidades disponibles</div>`;
@@ -545,18 +437,11 @@ function loadQualityOptions() {
     let bestLevelIndex = 0;
     let maxHeight = 0;
     hlsInstance.levels.forEach((level, i) => {
-        if (level.height > maxHeight) {
-            maxHeight = level.height;
-            bestLevelIndex = i;
-        }
+        if (level.height > maxHeight) { maxHeight = level.height; bestLevelIndex = i; }
     });
     const autoOption = createQualityOption("Auto (Recomendado)", -1, hlsInstance.currentLevel === -1);
     qualityContainer.appendChild(autoOption);
-  
-    const sortedLevels = [...hlsInstance.levels]
-        .map((level, index) => ({...level, originalIndex: index}))
-        .sort((a, b) => b.height - a.height);
-  
+    const sortedLevels = [...hlsInstance.levels].map((level, index) => ({...level, originalIndex: index})).sort((a, b) => b.height - a.height);
     sortedLevels.forEach((level) => {
         const label = `${level.height}p`;
         const isActive = hlsInstance.currentLevel === level.originalIndex;
@@ -573,12 +458,12 @@ function createQualityOption(label, levelIndex, isActive, isRecommended = false)
     if (isRecommended) html += `<span class="recommended">Recomendada</span>`;
     if (isActive) html += `<i class="fas fa-check check"></i>`;
     div.innerHTML = html;
-  
     div.addEventListener("click", () => {
         if (!hlsInstance) return;
         isChangingQuality = true;
         qualityLoader.classList.add("show");
         settingsMenu.classList.remove("show");
+        settingsBtn.classList.remove("settings-btn-active");
         hlsInstance.currentLevel = levelIndex;
         setTimeout(() => {
             if (isChangingQuality) {
@@ -590,14 +475,8 @@ function createQualityOption(label, levelIndex, isActive, isRecommended = false)
     return div;
 }
 
-/* EVENTOS DEL VIDEO */
-video.addEventListener("play", () => {
-    playBtn.className = "fas fa-pause btn big";
-});
-
-video.addEventListener("pause", () => {
-    playBtn.className = "fas fa-play btn big";
-});
+video.addEventListener("play", () => { playBtn.className = "fas fa-pause btn big"; });
+video.addEventListener("pause", () => { playBtn.className = "fas fa-play btn big"; });
 
 video.addEventListener("timeupdate", () => {
     const c = video.currentTime;
@@ -612,39 +491,25 @@ seek.addEventListener("input", () => {
     if (video.duration) video.currentTime = (seek.value / 100) * video.duration;
 });
 
-/* ATAJOS DE TECLADO */
 document.addEventListener("keydown", (e) => {
     if (e.target.tagName === "INPUT") return;
     if (e.code === "Space") { e.preventDefault(); togglePlay(); }
     if (e.code === "ArrowLeft") rewind();
     if (e.code === "ArrowRight") forward();
-    if (e.code === "KeyF") toggleFullscreen();
-    if (e.code === "Escape" && document.fullscreenElement) {
-        document.exitFullscreen();
-    }
 });
 
-/* AUTO OCULTAR CONTROLES */
 let hideTimeout;
 function showControls(fast = false) {
     controls.classList.remove("hide");
     clearTimeout(hideTimeout);
-    const delay = fast ? 900 : 3500;
     hideTimeout = setTimeout(() => {
         if (!video.paused) controls.classList.add("hide");
-    }, delay);
+    }, fast ? 900 : 3500);
 }
 document.addEventListener("mousemove", () => showControls(false));
-document.addEventListener("touchstart", (e) => {
-    if (e.target.tagName === "VIDEO" || e.target.id === "player") {
-        showControls(true);
-    } else {
-        showControls(false);
-    }
-});
+document.addEventListener("touchstart", () => showControls(false));
 video.addEventListener("click", togglePlay);
 
-/* DOBLE TOQUE EN MÓVIL */
 let lastTapTime = 0;
 video.addEventListener("touchend", (e) => {
     const currentTime = new Date().getTime();
@@ -656,7 +521,6 @@ video.addEventListener("touchend", (e) => {
     lastTapTime = currentTime;
 });
 
-/* INICIALIZACIÓN */
 function initPlayer() {
     loadMetadata();
     video.addEventListener("loadedmetadata", () => {
@@ -664,7 +528,6 @@ function initPlayer() {
         loadSavedProgress();
     });
     video.addEventListener("durationchange", updateTotalTime);
-    if (video.duration) updateTotalTime();
 }
 initPlayer();
 </script>
