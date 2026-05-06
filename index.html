@@ -42,29 +42,25 @@ nav { background: #111; padding: 18px 0; border-bottom: 1px solid #222; }
 </style>
 </head>
 <body>
-
 <nav>
     <div class="nav-content">
         <div class="logo"><i class="fas fa-play-circle"></i> <span>LzPlayer <strong>PRO</strong></span></div>
     </div>
 </nav>
-
 <div class="container">
     <div class="hero">
         <h1>Agregar nuevo contenido</h1>
         <p>Busca en TMDB o agrega manualmente tus enlaces de video</p>
     </div>
-
     <!-- AGREGAR CONTENIDO -->
     <div class="add-section">
         <h2><i class="fas fa-plus-circle" style="color:var(--primary)"></i> Agregar contenido</h2>
-        
+       
         <div class="search-box">
             <input type="text" id="search-input" placeholder="Buscar película en TMDB..." onkeyup="if (event.key === 'Enter') searchTMDB()">
             <button onclick="searchTMDB()"><i class="fas fa-search"></i> Buscar</button>
         </div>
         <div id="search-results" class="search-results"></div>
-
         <div class="add-form">
             <h3>O agregar manualmente</h3>
             <div class="form-row">
@@ -81,28 +77,18 @@ nav { background: #111; padding: 18px 0; border-bottom: 1px solid #222; }
                 <label>URL del Video (.m3u8 recomendado)</label>
                 <input type="text" id="manual-video" placeholder="https://tu-servidor.com/video.m3u8">
             </div>
-            <button class="btn-primary" onclick="addManualContent()">Guardar y agregar al historial</button>
+            <button class="btn-primary" onclick="addManualContent()">Guardar y generar URL</button>
         </div>
     </div>
-
-    <!-- NOTA -->
-    <div style="background:#1a1a1a; border-radius:12px; padding:22px 26px; margin-top:10px; border:1px solid #333;">
-        <p style="margin:0; color:#aaa; font-size:14.5px;">
-            <i class="fas fa-info-circle" style="color:var(--primary); margin-right:8px;"></i>
-            El historial de los últimos <strong>15 videos reproducidos</strong> se muestra directamente desde el reproductor 
-            (botón <i class="fas fa-history"></i> en la esquina superior izquierda).
-        </p>
-    </div>
-
     <!-- URL GENERADA (para copiar) -->
     <div id="generated-url-box" style="display:none; background:#1f2a2f; border:2px solid #00d4ff; border-radius:14px; padding:22px 26px; margin-bottom:40px;">
         <p style="margin:0 0 12px; color:#00d4ff; font-weight:700; font-size:15px;">
             <i class="fas fa-link"></i> URL lista para usar / compartir:
         </p>
         <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-            <input type="text" id="generated-url" readonly 
+            <input type="text" id="generated-url" readonly
                    style="flex:1; min-width:280px; padding:13px 16px; background:#111; border:1px solid #444; border-radius:10px; color:#fff; font-size:14px; font-family:monospace;">
-            <button onclick="copyGeneratedUrl()" 
+            <button onclick="copyGeneratedUrl()"
                     style="padding:13px 26px; background:#00d4ff; color:#000; border:none; border-radius:10px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px; white-space:nowrap;">
                 <i class="fas fa-copy"></i> <span>Copiar URL</span>
             </button>
@@ -110,7 +96,6 @@ nav { background: #111; padding: 18px 0; border-bottom: 1px solid #222; }
         <small style="color:#777; display:block; margin-top:10px;">Esta URL abre directamente el reproductor con el video.</small>
     </div>
 </div>
-
 <!-- Modal -->
 <div id="add-modal" class="modal">
     <div class="modal-content">
@@ -132,32 +117,28 @@ nav { background: #111; padding: 18px 0; border-bottom: 1px solid #222; }
         </div>
     </div>
 </div>
-
 <div id="toast" class="toast"><i class="fas fa-check-circle" style="color:#00d4ff"></i> <span id="toast-text"></span></div>
-
 <script>
 const TMDB_API_KEY = "38e497c6c1a043d1341416e80915669f";
 let currentSearchResult = null;
-
 function showToast(msg) {
     const toast = document.getElementById("toast");
     document.getElementById("toast-text").textContent = msg;
     toast.classList.add("show");
     setTimeout(() => toast.classList.remove("show"), 2600);
 }
-
 async function searchTMDB() {
     const q = document.getElementById("search-input").value.trim();
     if (!q) return;
     const container = document.getElementById("search-results");
     container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:#666;">Buscando...</div>`;
-    
+   
     try {
         const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(q)}&language=es-MX`);
         const data = await res.json();
         container.innerHTML = "";
         if (!data.results?.length) { container.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:#888;">Sin resultados</div>`; return; }
-        
+       
         data.results.slice(0,10).forEach(m => {
             const card = document.createElement("div");
             card.className = "search-card";
@@ -168,7 +149,6 @@ async function searchTMDB() {
         });
     } catch { container.innerHTML = `<div style="color:#e63946;text-align:center;">Error al buscar</div>`; }
 }
-
 function openAddModal(movie) {
     currentSearchResult = movie;
     document.getElementById("modal-title").textContent = movie.title;
@@ -177,57 +157,39 @@ function openAddModal(movie) {
     document.getElementById("modal-video-url").value = "";
     document.getElementById("add-modal").classList.add("show");
 }
-
 function closeModal() {
     document.getElementById("add-modal").classList.remove("show");
 }
-
 function confirmAddFromSearch() {
     if (!currentSearchResult) return;
     const url = document.getElementById("modal-video-url").value.trim();
     if (!url) return alert("Ingresa la URL del video");
-    
-    const backdrop = currentSearchResult.backdrop_path 
-        ? `https://image.tmdb.org/t/p/original${currentSearchResult.backdrop_path}` 
+   
+    const backdrop = currentSearchResult.backdrop_path
+        ? `https://image.tmdb.org/t/p/original${currentSearchResult.backdrop_path}`
         : currentSearchResult.poster_path ? `https://image.tmdb.org/t/p/original${currentSearchResult.poster_path}` : "";
-
+   
     const item = { title: currentSearchResult.title, backdrop, videoUrl: url };
-
-    // Guardar en recientes
-    let recent = JSON.parse(localStorage.getItem("lzplayer_recent") || "[]");
-    recent = recent.filter(r => r.videoUrl !== item.videoUrl);
-    recent.unshift({ ...item, lastPlayed: new Date().toISOString() });
-    if (recent.length > 15) recent.length = 15;
-    localStorage.setItem("lzplayer_recent", JSON.stringify(recent));
-
+    
     closeModal();
     showToast("¡Agregado! URL generada abajo");
     showGeneratedUrl(item.videoUrl, item.backdrop, item.title);
-    
+   
     document.getElementById("search-input").value = "";
     document.getElementById("search-results").innerHTML = "";
 }
-
 function addManualContent() {
     const title = document.getElementById("manual-title").value.trim();
     const poster = document.getElementById("manual-poster").value.trim();
     const videoUrl = document.getElementById("manual-video").value.trim();
     if (!title || !videoUrl) return alert("Título y URL del video son obligatorios");
-
-    let recent = JSON.parse(localStorage.getItem("lzplayer_recent") || "[]");
-    recent = recent.filter(r => r.videoUrl !== videoUrl);
-    recent.unshift({ title, backdrop: poster, videoUrl, lastPlayed: new Date().toISOString() });
-    if (recent.length > 15) recent.length = 15;
-    localStorage.setItem("lzplayer_recent", JSON.stringify(recent));
-
+    
     document.getElementById("manual-title").value = "";
     document.getElementById("manual-poster").value = "";
     document.getElementById("manual-video").value = "";
-
     showToast("Contenido agregado. URL generada abajo");
     showGeneratedUrl(videoUrl, poster, title);
 }
-
 // ==================== GENERAR Y COPIAR URL ====================
 function generatePlayerUrl(videoUrl, poster, title) {
     const base = window.location.origin + window.location.pathname.replace("index.html", "player.html");
@@ -237,7 +199,6 @@ function generatePlayerUrl(videoUrl, poster, title) {
     if (title) params.set("title", title);
     return `${base}?${params.toString()}`;
 }
-
 function showGeneratedUrl(videoUrl, poster, title) {
     const box = document.getElementById("generated-url-box");
     const input = document.getElementById("generated-url");
@@ -245,7 +206,6 @@ function showGeneratedUrl(videoUrl, poster, title) {
     box.style.display = "block";
     setTimeout(() => box.scrollIntoView({ behavior: "smooth", block: "center" }), 300);
 }
-
 function copyGeneratedUrl() {
     const input = document.getElementById("generated-url");
     input.select();
@@ -261,7 +221,6 @@ function copyGeneratedUrl() {
         alert("URL copiada");
     });
 }
-
 document.getElementById("add-modal").addEventListener("click", e => { if (e.target.id === "add-modal") closeModal(); });
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
 </script>
