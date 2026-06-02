@@ -32,20 +32,54 @@ video {
     z-index: 3; transition: opacity 0.4s ease;
 }
 .controls.hide { opacity: 0; pointer-events: none; }
-
-/* Resto de estilos iguales (top, center, bottom, botones, etc.) */
-.top { color: #fff; font-size: 22px; font-weight: 700; text-shadow: 0 2px 8px rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: space-between; }
-.top-left { display: flex; align-items: center; gap: 12px; }
+.top {
+    color: #fff; font-size: 22px; font-weight: 700; text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    display: flex; align-items: center; justify-content: space-between;
+}
+.top-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
 .center { display: flex; justify-content: center; align-items: center; gap: 40px; }
-.btn { color: #fff; font-size: 26px; cursor: pointer; transition: all 0.2s ease; text-shadow: 0 2px 6px rgba(0,0,0,0.5); }
+.btn { 
+    color: #fff; font-size: 26px; cursor: pointer; transition: all 0.2s ease; 
+    text-shadow: 0 2px 6px rgba(0,0,0,0.5); 
+}
 .btn:hover { color: var(--primary); transform: scale(1.15); }
-.btn.big { font-size: 68px; }
+.btn.big { 
+    font-size: 68px; 
+    transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1); 
+}
 .btn:active { transform: scale(0.88); }
+
+/* Animación especial para rewind y forward */
+.btn-rewind { animation: rotateRewind 400ms ease forwards; }
+.btn-forward { animation: rotateForward 400ms ease forwards; }
+
+@keyframes rotateRewind {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(-55deg); }
+}
+@keyframes rotateForward {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(55deg); }
+}
+
+/* Engranaje que gira */
+.settings-btn-active {
+    animation: gearSpin 600ms ease;
+}
+@keyframes gearSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(180deg); }
+}
 
 .bottom { display: flex; align-items: center; gap: 12px; color: #fff; }
 .bottom span { font-size: 13px; font-variant-numeric: tabular-nums; min-width: 60px; text-align: center; }
 input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
 
+/* MENÚ CONFIGURACIÓN */
 .settings-menu {
     position: absolute; bottom: 75px; right: 30px;
     background: rgba(20,20,20,0.95); border-radius: 12px; padding: 12px 0;
@@ -53,13 +87,96 @@ input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
     border: 1px solid rgba(255,255,255,0.1); z-index: 10; display: none; flex-direction: column;
 }
 .settings-menu.show { display: flex; }
-
-/* Loader y modal (mismos estilos) */
-.quality-loader, .resume-modal {
-    position: absolute; inset: 0; z-index: 10;
-    background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center;
+.settings-header { padding: 8px 18px; font-size: 14px; font-weight: 600; color: #aaa; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 6px; }
+.quality-option {
+    padding: 11px 18px; font-size: 14px; color: #fff; cursor: pointer;
+    transition: background 0.2s; display: flex; align-items: center; gap: 10px;
 }
-.quality-loader.show, .resume-modal.show { display: flex; }
+.quality-option:hover { background: rgba(255,255,255,0.08); }
+.quality-option.active { color: var(--primary); font-weight: 600; }
+.quality-option .check { margin-left: auto; color: var(--primary); }
+.quality-option .recommended {
+    font-size: 11px; background: var(--primary); color: #000; padding: 1px 7px;
+    border-radius: 10px; margin-left: 8px; font-weight: 600;
+}
+
+/* LOADER */
+.quality-loader {
+    position: absolute; inset: 0; z-index: 5;
+    background: rgba(0,0,0,0.7);
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    color: #fff; gap: 14px;
+}
+.quality-loader.show { display: flex; }
+.spinner {
+    width: 46px; height: 46px;
+    border: 5px solid rgba(255,255,255,0.2);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* MODAL REANUDAR */
+.resume-modal {
+    position: absolute; inset: 0; z-index: 10;
+    background: rgba(0,0,0,0.85);
+    display: none; align-items: center; justify-content: center;
+}
+.resume-modal.show { display: flex; }
+.resume-content {
+    background: #1a1a1a;
+    padding: 30px 35px;
+    border-radius: 16px;
+    text-align: center;
+    max-width: 420px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.resume-content p {
+    color: #fff;
+    font-size: 17px;
+    margin-bottom: 25px;
+    line-height: 1.4;
+}
+.resume-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+.resume-buttons button {
+    padding: 12px 28px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+#btn-continue {
+    background: var(--primary);
+    color: #000;
+}
+#btn-continue:hover {
+    background: #00b8e6;
+}
+#btn-restart {
+    background: #333;
+    color: #fff;
+}
+#btn-restart:hover {
+    background: #444;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .btn.big { font-size: 48px; } 
+    .btn { font-size: 22px; } 
+    .top { font-size: 17px; }
+    .controls { padding: 18px 20px; }
+    .settings-menu { right: 20px; min-width: 210px; }
+    .resume-content { margin: 0 15px; padding: 25px; }
+}
 </style>
 </head>
 <body>
@@ -120,45 +237,51 @@ const titleEl = document.getElementById("title-text");
 const currentTimeEl = document.getElementById("current");
 const totalTimeEl = document.getElementById("total");
 const backdropOverlay = document.getElementById("backdrop-overlay");
+const settingsBtn = document.getElementById("settingsBtn");
+const settingsMenu = document.getElementById("settings-menu");
+const qualityContainer = document.getElementById("quality-options");
+const qualityLoader = document.getElementById("quality-loader");
+const resumeModal = document.getElementById("resume-modal");
+const resumeText = document.getElementById("resume-text");
+const btnContinue = document.getElementById("btn-continue");
+const btnRestart = document.getElementById("btn-restart");
+const fullscreenBtn = document.getElementById("fullscreenBtn");
 
 const params = new URLSearchParams(window.location.search);
 let VIDEO_URL = params.get('video') ? decodeURIComponent(params.get('video')) : '';
 let POSTER_URL = params.get('poster') ? decodeURIComponent(params.get('poster')) : '';
 let TITLE = params.get('title') ? decodeURIComponent(params.get('title')) : 'Reproduciendo';
 
+const STORAGE_KEY = `lzplayer_resume_${btoa(VIDEO_URL || 'unknown').replace(/[^a-zA-Z0-9]/g, '').slice(0, 50)}`;
+
 let hlsInstance = null;
 let hasStarted = false;
+let isChangingQuality = false;
+let saveInterval = null;
 
-// ==================== FORZAR HORIZONTAL + FULLSCREEN ====================
+// ==================== FULLSCREEN + FORZAR HORIZONTAL ====================
 async function forceLandscapeAndFullscreen() {
-    // Fullscreen
-    if (!document.fullscreenElement) {
+    // Pantalla completa
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
         try {
             if (player.requestFullscreen) await player.requestFullscreen();
             else if (player.webkitRequestFullscreen) await player.webkitRequestFullscreen();
         } catch (e) {}
     }
 
-    // Forzar horizontal
+    // Forzar modo horizontal
     if (screen.orientation && typeof screen.orientation.lock === "function") {
         try {
             await screen.orientation.lock("landscape-primary");
         } catch (e) {
             try {
                 await screen.orientation.lock("landscape");
-            } catch (err) {
-                console.log("No se pudo bloquear orientación");
-            }
+            } catch (err) {}
         }
     }
 }
 
-// Llamar después de interacción del usuario
-function tryForceOrientation() {
-    forceLandscapeAndFullscreen();
-}
-
-// ==================== OTRAS FUNCIONES ====================
+// ==================== FUNCIONES DE TIEMPO ====================
 function formatTime(seconds) {
     if (!seconds || isNaN(seconds)) return "00:00:00";
     const h = Math.floor(seconds / 3600);
@@ -167,9 +290,47 @@ function formatTime(seconds) {
     return `${h}:${m < 10 ? "0" + m : m}:${s < 10 ? "0" + s : s}`;
 }
 
+function updateTotalTime() {
+    if (video.duration && !isNaN(video.duration)) {
+        totalTimeEl.textContent = formatTime(video.duration);
+    }
+}
+
+// Guardar progreso
+function saveProgress() {
+    if (video.currentTime > 5 && VIDEO_URL) {
+        localStorage.setItem(STORAGE_KEY, video.currentTime);
+    }
+}
+
+// Cargar progreso guardado
+function loadSavedProgress() {
+    if (!VIDEO_URL) return;
+    const savedTime = parseFloat(localStorage.getItem(STORAGE_KEY));
+    if (savedTime && savedTime > 10) {
+        resumeText.innerHTML = `Te quedaste en <strong>${formatTime(savedTime)}</strong>.<br>¿Quieres continuar desde ahí?`;
+        resumeModal.classList.add("show");
+        
+        btnContinue.onclick = () => {
+            video.currentTime = savedTime;
+            resumeModal.classList.remove("show");
+            hideBackdropAndShowVideo();
+            hasStarted = true;
+            video.play();
+        };
+        btnRestart.onclick = () => {
+            localStorage.removeItem(STORAGE_KEY);
+            resumeModal.classList.remove("show");
+            hideBackdropAndShowVideo();
+            hasStarted = true;
+            video.play();
+        };
+    }
+}
+
 function hideBackdropAndShowVideo() {
     backdropOverlay.style.opacity = "0";
-    setTimeout(() => backdropOverlay.style.display = "none", 600);
+    setTimeout(() => { backdropOverlay.style.display = "none"; }, 600);
     video.style.opacity = "1";
 }
 
@@ -180,15 +341,23 @@ function togglePlay() {
             hasStarted = true;
         }
         video.play().catch(() => {});
-        tryForceOrientation();           // ← Intenta forzar horizontal al reproducir
+        forceLandscapeAndFullscreen();  // Forzar horizontal al reproducir
     } else {
         video.pause();
     }
 }
 
+function rewind() {
+    video.currentTime = Math.max(0, video.currentTime - 10);
+}
+
+function forward() {
+    video.currentTime = Math.min(video.duration || 0, video.currentTime + 10);
+}
+
 function loadVideo(url) {
     if (url.includes(".m3u8") && Hls.isSupported()) {
-        hlsInstance = new Hls({ enableWorker: true, lowLatencyMode: true });
+        hlsInstance = new Hls({ enableWorker: true, lowLatencyMode: true, backBufferLength: 90 });
         hlsInstance.loadSource(url);
         hlsInstance.attachMedia(video);
     } else {
@@ -204,19 +373,53 @@ function loadMetadata() {
     if (VIDEO_URL) loadVideo(VIDEO_URL);
 }
 
-// ==================== INICIO ====================
-async function initPlayer() {
+// ==================== INICIO DEL REPRODUCTOR ====================
+function initPlayer() {
     loadMetadata();
 
     video.addEventListener("loadedmetadata", () => {
-        setTimeout(() => {
-            forceLandscapeAndFullscreen();   // Primer intento
-        }, 600);
+        updateTotalTime();
+        loadSavedProgress();
+        setTimeout(forceLandscapeAndFullscreen, 800);
     });
 
-    // Intentar también al primer toque en la pantalla
-    document.addEventListener("touchstart", tryForceOrientation, { once: true });
-    document.addEventListener("click", tryForceOrientation, { once: true });
+    video.addEventListener("play", () => { 
+        playBtn.className = "fas fa-pause btn big"; 
+    });
+    video.addEventListener("pause", () => { 
+        playBtn.className = "fas fa-play btn big"; 
+    });
+    video.addEventListener("timeupdate", () => {
+        const c = video.currentTime;
+        const t = video.duration;
+        if (!isNaN(t) && t > 0) {
+            seek.value = (c / t) * 100;
+            currentTimeEl.textContent = formatTime(c);
+        }
+        if (!saveInterval) saveInterval = setInterval(saveProgress, 1000);
+    });
+
+    seek.addEventListener("input", () => {
+        if (video.duration) video.currentTime = (seek.value / 100) * video.duration;
+    });
+
+    // Eventos de controles
+    fullscreenBtn.addEventListener("click", (e) => {
+        e.stopImmediatePropagation();
+        forceLandscapeAndFullscreen();
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.code === "KeyF") forceLandscapeAndFullscreen();
+        if (e.code === "Space") { e.preventDefault(); togglePlay(); }
+        if (e.code === "ArrowLeft") rewind();
+        if (e.code === "ArrowRight") forward();
+    });
+
+    // Intento extra al tocar la pantalla
+    document.addEventListener("touchstart", () => {
+        forceLandscapeAndFullscreen();
+    }, { once: true });
 }
 
 initPlayer();
