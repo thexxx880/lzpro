@@ -156,7 +156,6 @@ input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
     background: #444;
 }
 
-/* RESPONSIVE */
 @media (max-width: 768px) {
     .btn.big { font-size: 48px; } 
     .btn { font-size: 22px; } 
