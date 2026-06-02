@@ -75,7 +75,84 @@ input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
 }
 .settings-menu.show { display: flex; }
 
-.quality-loader, .resume-modal { /* ... mismo estilo anterior ... */ }
+
+/* LOADER */
+.quality-loader {
+    position: absolute; inset: 0; z-index: 5;
+    background: rgba(0,0,0,0.7);
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    color: #fff; gap: 14px;
+}
+.quality-loader.show { display: flex; }
+.spinner {
+    width: 46px; height: 46px;
+    border: 5px solid rgba(255,255,255,0.2);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* MODAL REANUDAR */
+.resume-modal {
+    position: absolute; inset: 0; z-index: 10;
+    background: rgba(0,0,0,0.85);
+    display: none; align-items: center; justify-content: center;
+}
+.resume-modal.show { display: flex; }
+.resume-content {
+    background: #1a1a1a;
+    padding: 30px 35px;
+    border-radius: 16px;
+    text-align: center;
+    max-width: 420px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.resume-content p {
+    color: #fff;
+    font-size: 17px;
+    margin-bottom: 25px;
+    line-height: 1.4;
+}
+.resume-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+.resume-buttons button {
+    padding: 12px 28px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+#btn-continue {
+    background: var(--primary);
+    color: #000;
+}
+#btn-continue:hover {
+    background: #00b8e6;
+}
+#btn-restart {
+    background: #333;
+    color: #fff;
+}
+#btn-restart:hover {
+    background: #444;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .btn.big { font-size: 48px; } 
+    .btn { font-size: 22px; } 
+    .top { font-size: 17px; }
+    .controls { padding: 18px 20px; }
+    .settings-menu { right: 20px; min-width: 210px; }
+    .resume-content { margin: 0 15px; padding: 25px; }
+}
 </style>
 </head>
 <body>
