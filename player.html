@@ -273,7 +273,7 @@ input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
     </div>
 </div>
 <script>
- document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", () => {
     const video = document.getElementById("video");
     const playBtn = document.getElementById("playBtn");
     const controls = document.getElementById("controls");
@@ -574,11 +574,15 @@ input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
         video.currentTime = Math.min(video.duration || 0, video.currentTime + 10);
     };
 
+    // ==================== EVENTO MENÚ CONFIGURACIÓN ====================
     settingsBtn.addEventListener("click", (e) => {
         e.stopImmediatePropagation();
         settingsMenu.classList.toggle("show");
         settingsBtn.classList.toggle("settings-btn-active");
-        if (settingsMenu.classList.contains("show") && hlsInstance) loadQualityOptions();
+        if (settingsMenu.classList.contains("show")) {
+            if (hlsInstance) loadQualityOptions();
+            loadSizeOptions(); // 🔥 Llamada a la nueva función
+        }
     });
 
     document.addEventListener("click", (e) => {
@@ -588,6 +592,7 @@ input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
         }
     });
 
+    // ==================== LÓGICA DE CALIDAD ====================
     function loadQualityOptions() { 
         qualityContainer.innerHTML = "";
         if (!hlsInstance || !hlsInstance.levels.length) {
@@ -635,6 +640,46 @@ input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
         return div;
     }
 
+    // ==================== LÓGICA DE TAMAÑO DE VIDEO (OBJECT-FIT) ====================
+    function loadSizeOptions() {
+        let sizeContainer = document.getElementById("size-options");
+        if (!sizeContainer) {
+            sizeContainer = document.createElement("div");
+            sizeContainer.id = "size-options";
+            settingsMenu.appendChild(sizeContainer);
+        }
+
+        sizeContainer.innerHTML = `<div style="padding: 10px 15px; font-weight: bold; border-top: 1px solid rgba(255,255,255,0.2); margin-top: 10px; font-size: 0.9em; color: #ccc;">Ajuste de Pantalla</div>`;
+
+        const sizeModes = [
+            { label: "Original (Sin cortes)", value: "contain" },
+            { label: "Llenar (Recorta bordes)", value: "cover" },
+            { label: "Estirar pantalla", value: "fill" }
+        ];
+
+        const currentFit = video.style.objectFit || "contain";
+
+        sizeModes.forEach(mode => {
+            const div = document.createElement("div");
+            const isActive = currentFit === mode.value;
+            
+            div.className = `quality-option ${isActive ? "active" : ""}`;
+            
+            let html = mode.label;
+            if (isActive) html += `<i class="fas fa-check check"></i>`;
+            div.innerHTML = html;
+
+            div.addEventListener("click", () => {
+                video.style.objectFit = mode.value;
+                settingsMenu.classList.remove("show");
+                settingsBtn.classList.remove("settings-btn-active");
+            });
+
+            sizeContainer.appendChild(div);
+        });
+    }
+
+    // ==================== CONTROLES Y EVENTOS DE REPRODUCCIÓN ====================
     video.addEventListener("play", () => { playBtn.className = "fas fa-pause btn big"; });
     video.addEventListener("pause", () => { playBtn.className = "fas fa-play btn big"; });
 
