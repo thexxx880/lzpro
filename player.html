@@ -37,12 +37,27 @@ video {
 .top-left {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 15px;
+}
+
+/* --- BOTÓN DE REGRESAR (FLECHA) --- */
+.back-btn {
+    font-size: 24px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+.back-btn:hover {
+    color: var(--primary);
+    transform: scale(1.15);
+}
+.back-btn:active {
+    transform: scale(0.9);
 }
 
 /* --- BOTÓN SIGUIENTE EPISODIO ESTILO NETFLIX --- */
 .next-ep-btn {
-    display: none; /* Oculto por defecto */
+    display: none;
     align-items: center;
     gap: 10px;
     background-color: rgba(20, 20, 20, 0.75);
@@ -69,7 +84,6 @@ video {
     border-color: #fff;
     transform: scale(1.05);
 }
-/* ------------------------------------------------ */
 
 .center { display: flex; justify-content: center; align-items: center; gap: 40px; }
 .btn { 
@@ -83,7 +97,6 @@ video {
 }
 .btn:active { transform: scale(0.88); }
 
-/* Animación especial para rewind y forward */
 .btn-rewind { animation: rotateRewind 400ms ease forwards; }
 .btn-forward { animation: rotateForward 400ms ease forwards; }
 
@@ -96,7 +109,6 @@ video {
     100% { transform: rotate(55deg); }
 }
 
-/* Engranaje que gira */
 .settings-btn-active {
     animation: gearSpin 600ms ease;
 }
@@ -222,9 +234,9 @@ input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
     <div class="controls" id="controls">
         <div class="top" id="title">
             <div class="top-left">
+                <i class="fas fa-arrow-left back-btn" id="exitPlayerBtn" title="Regresar al contenido"></i>
                 <span id="title-text">Cargando...</span>
             </div>
-            <!-- BOTÓN SIGUIENTE EPISODIO MOVIDO A LA PARTE SUPERIOR DERECHA -->
             <button id="nextEpBtn" class="next-ep-btn" title="Ir al siguiente episodio">
                 Siguiente episodio <i class="fas fa-step-forward"></i>
             </button>
@@ -250,7 +262,6 @@ input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
         <div id="quality-options"></div>
     </div>
   
-    <!-- MODAL REANUDAR -->
     <div id="resume-modal" class="resume-modal">
         <div class="resume-content">
             <p id="resume-text">Te quedaste en 00:00:00.<br>¿Quieres continuar desde ahí?</p>
@@ -283,7 +294,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const rewindBtn = document.getElementById("rewindBtn");
     const forwardBtn = document.getElementById("forwardBtn");
     const fullscreenBtn = document.getElementById("fullscreenBtn");
-    const nextEpBtn = document.getElementById("nextEpBtn"); // <--- REFERENCIA AL BOTÓN SUPERIOR DERECHO
+    const nextEpBtn = document.getElementById("nextEpBtn");
+    const exitPlayerBtn = document.getElementById("exitPlayerBtn"); // Flecha de regresar
 
     const params = new URLSearchParams(window.location.search);
     let VIDEO_URL = params.get('video') ? decodeURIComponent(params.get('video')) : '';
@@ -298,43 +310,45 @@ document.addEventListener("DOMContentLoaded", () => {
     let hasStarted = false;
     let isChangingQuality = false;
     let saveInterval = null;
-    let nextEpisodeData = null; // Guardará la URL del siguiente episodio
+    let nextEpisodeData = null;
+
+    // ==================== LÓGICA BOTÓN ATRÁS (SALIR) ====================
+    exitPlayerBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        // Cierra la pestaña si se abrió en una nueva, o regresa atrás de forma segura
+        if (window.history.length > 1) {
+            window.history.back();
+        } else {
+            window.close();
+        }
+    });
 
     // ==================== LÓGICA BOTÓN SIGUIENTE ====================
     nextEpBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         if (nextEpisodeData) {
             console.log("➡️ Redirigiendo al siguiente episodio...");
-            window.location.href = nextEpisodeData;
+            // Usamos REPLACE en lugar de HREF para que no contamine el historial
+            window.location.replace(nextEpisodeData);
         }
     });
 
     async function checkNextEpisode() {
-        console.log("=== INICIANDO BÚSQUEDA DE SIGUIENTE EPISODIO ===");
-        
-        if (!TMDB_ID || TITLE === 'Reproduciendo') {
-            console.warn("⚠️ Abortado: Faltan datos (TMDB_ID o Título no válido).");
-            return;
-        }
+        if (!TMDB_ID || TITLE === 'Reproduciendo') return;
 
         const match = TITLE.match(/(.*?)\s*-\s*T(\d+)E(\d+)/i);
-        if (!match) {
-            console.warn("⚠️ Abortado: El formato del título no coincide con 'Serie - T#E#'.");
-            return;
-        } 
+        if (!match) return;
 
         const seriesName = match[1].trim();
         const currentSeason = parseInt(match[2], 10);
         const currentEpisode = parseInt(match[3], 10);
         const nextEpisodeNum = currentEpisode + 1;
 
-        console.log(`✅ Metadatos detectados -> Serie: "${seriesName}" | Temp: ${currentSeason} | Buscando Cap: ${nextEpisodeNum}`);
-
         const jsonUrl = `https://raw.githubusercontent.com/thexxx880/apple/main/data%20base/data/serie/${TMDB_ID}/t${currentSeason}/${TMDB_ID}.json`;
 
         try {
             const response = await fetch(jsonUrl);
-            if (!response.ok) return; // Si falla o no existe, el botón simplemente se queda oculto
+            if (!response.ok) return; 
             
             const data = await response.json();
             
@@ -345,14 +359,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 
                 nextEpisodeData = `?video=${encodeURIComponent(nextVideoUrl)}&poster=${encodeURIComponent(posterUrl)}&title=${encodeURIComponent(nextTitle)}&id=${TMDB_ID}`;
                 
-                // MUESTRA EL BOTÓN PORQUE ENCONTRÓ EPISODIO
                 nextEpBtn.style.display = "flex";
-                console.log(`🎉 ¡ÉXITO! Siguiente episodio activado: ${nextTitle}`);
-            } else {
-                console.warn(`🛑 No se encontró el capítulo ${nextEpisodeNum} en el JSON (Fin de temporada).`);
             }
         } catch (error) {
-            console.error("❌ Error durante la petición fetch:", error);
+            console.error("❌ Error fetch:", error);
         }
     }
 
@@ -381,7 +391,8 @@ document.addEventListener("DOMContentLoaded", () => {
             e.target.closest('.settings-menu') || 
             e.target.closest('.resume-modal') || 
             e.target.tagName === "INPUT" ||
-            e.target.closest('#nextEpBtn')) {
+            e.target.closest('#nextEpBtn') ||
+            e.target.closest('#exitPlayerBtn')) {
             return;
         }
         toggleFullscreen();
@@ -455,7 +466,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         if (VIDEO_URL) loadVideo(VIDEO_URL);
         
-        // EJECUTAR BÚSQUEDA DEL SIGUIENTE EPISODIO
         checkNextEpisode();
     }
 
@@ -501,7 +511,6 @@ document.addEventListener("DOMContentLoaded", () => {
         video.style.opacity = "1";
     }
 
-    // Funciones globales unidas al scope para los onclick del HTML
     window.togglePlay = function() {
         if (video.paused) {
             if (!hasStarted) {
