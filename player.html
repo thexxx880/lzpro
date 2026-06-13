@@ -39,6 +39,38 @@ video {
     align-items: center;
     gap: 12px;
 }
+
+/* --- BOTÓN SIGUIENTE EPISODIO ESTILO NETFLIX --- */
+.next-ep-btn {
+    display: none; /* Oculto por defecto */
+    align-items: center;
+    gap: 10px;
+    background-color: rgba(20, 20, 20, 0.75);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    padding: 8px 18px;
+    border-radius: 4px;
+    font-size: 15px;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.next-ep-btn i {
+    font-size: 14px;
+}
+.next-ep-btn:hover {
+    background-color: #fff;
+    color: #000;
+    border-color: #fff;
+    transform: scale(1.05);
+}
+/* ------------------------------------------------ */
+
 .center { display: flex; justify-content: center; align-items: center; gap: 40px; }
 .btn { 
     color: #fff; font-size: 26px; cursor: pointer; transition: all 0.2s ease; 
@@ -169,7 +201,8 @@ input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
 @media (max-width: 768px) {
     .btn.big { font-size: 48px; } 
     .btn { font-size: 22px; } 
-    .top { font-size: 17px; }
+    .top { font-size: 17px; flex-direction: column; align-items: flex-start; gap: 10px; }
+    .next-ep-btn { align-self: flex-end; font-size: 13px; padding: 6px 12px; }
     .controls { padding: 18px 20px; }
     .settings-menu { right: 20px; min-width: 210px; }
     .resume-content { margin: 0 15px; padding: 25px; }
@@ -191,13 +224,16 @@ input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
             <div class="top-left">
                 <span id="title-text">Cargando...</span>
             </div>
+            <!-- BOTÓN SIGUIENTE EPISODIO MOVIDO A LA PARTE SUPERIOR DERECHA -->
+            <button id="nextEpBtn" class="next-ep-btn" title="Ir al siguiente episodio">
+                Siguiente episodio <i class="fas fa-step-forward"></i>
+            </button>
         </div>
       
         <div class="center">
             <i class="fas fa-rotate-left btn" id="rewindBtn" onclick="rewind()"></i>
             <i class="fas fa-play btn big" id="playBtn" onclick="togglePlay()"></i>
             <i class="fas fa-rotate-right btn" id="forwardBtn" onclick="forward()"></i>
-            <i class="fas fa-step-forward btn" id="nextEpBtn" title="Siguiente Episodio" style="opacity: 0.4; cursor: not-allowed;"></i>
         </div>
       
         <div class="bottom">
@@ -214,6 +250,7 @@ input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
         <div id="quality-options"></div>
     </div>
   
+    <!-- MODAL REANUDAR -->
     <div id="resume-modal" class="resume-modal">
         <div class="resume-content">
             <p id="resume-text">Te quedaste en 00:00:00.<br>¿Quieres continuar desde ahí?</p>
@@ -246,7 +283,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const rewindBtn = document.getElementById("rewindBtn");
     const forwardBtn = document.getElementById("forwardBtn");
     const fullscreenBtn = document.getElementById("fullscreenBtn");
-    const nextEpBtn = document.getElementById("nextEpBtn"); // <--- REFERENCIA AL NUEVO BOTÓN
+    const nextEpBtn = document.getElementById("nextEpBtn"); // <--- REFERENCIA AL BOTÓN SUPERIOR DERECHO
 
     const params = new URLSearchParams(window.location.search);
     let VIDEO_URL = params.get('video') ? decodeURIComponent(params.get('video')) : '';
@@ -269,8 +306,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (nextEpisodeData) {
             console.log("➡️ Redirigiendo al siguiente episodio...");
             window.location.href = nextEpisodeData;
-        } else {
-            console.log("⚠️ Clic ignorado: No hay datos del siguiente episodio.");
         }
     });
 
@@ -278,13 +313,13 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("=== INICIANDO BÚSQUEDA DE SIGUIENTE EPISODIO ===");
         
         if (!TMDB_ID || TITLE === 'Reproduciendo') {
-            console.warn("⚠️ Abortado: Faltan datos (TMDB_ID o Título no válido). Revisa los parámetros de la URL.");
+            console.warn("⚠️ Abortado: Faltan datos (TMDB_ID o Título no válido).");
             return;
         }
 
         const match = TITLE.match(/(.*?)\s*-\s*T(\d+)E(\d+)/i);
         if (!match) {
-            console.warn("⚠️ Abortado: El formato del título no coincide con 'Serie - T#E#'. Título actual:", TITLE);
+            console.warn("⚠️ Abortado: El formato del título no coincide con 'Serie - T#E#'.");
             return;
         } 
 
@@ -296,17 +331,12 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log(`✅ Metadatos detectados -> Serie: "${seriesName}" | Temp: ${currentSeason} | Buscando Cap: ${nextEpisodeNum}`);
 
         const jsonUrl = `https://raw.githubusercontent.com/thexxx880/apple/main/data%20base/data/serie/${TMDB_ID}/t${currentSeason}/${TMDB_ID}.json`;
-        console.log("🔍 Consultando base de datos JSON en:", jsonUrl);
 
         try {
             const response = await fetch(jsonUrl);
-            if (!response.ok) {
-                console.error(`❌ Error al obtener el JSON. Estado HTTP: ${response.status}`);
-                return;
-            }
+            if (!response.ok) return; // Si falla o no existe, el botón simplemente se queda oculto
             
             const data = await response.json();
-            console.log("✅ JSON cargado correctamente:", data);
             
             if (data.capitulos && data.capitulos[nextEpisodeNum.toString()]) {
                 const nextVideoUrl = data.capitulos[nextEpisodeNum.toString()];
@@ -315,15 +345,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 
                 nextEpisodeData = `?video=${encodeURIComponent(nextVideoUrl)}&poster=${encodeURIComponent(posterUrl)}&title=${encodeURIComponent(nextTitle)}&id=${TMDB_ID}`;
                 
-                // ENCENDEMOS EL BOTÓN VISUALMENTE
-                nextEpBtn.style.opacity = "1";
-                nextEpBtn.style.cursor = "pointer";
+                // MUESTRA EL BOTÓN PORQUE ENCONTRÓ EPISODIO
+                nextEpBtn.style.display = "flex";
                 console.log(`🎉 ¡ÉXITO! Siguiente episodio activado: ${nextTitle}`);
             } else {
-                console.warn(`🛑 No se encontró el capítulo ${nextEpisodeNum} en el JSON (Fin de temporada o no existe).`);
+                console.warn(`🛑 No se encontró el capítulo ${nextEpisodeNum} en el JSON (Fin de temporada).`);
             }
         } catch (error) {
-            console.error("❌ Error crítico durante la petición fetch:", error);
+            console.error("❌ Error durante la petición fetch:", error);
         }
     }
 
@@ -351,7 +380,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (e.target.closest('.controls') || 
             e.target.closest('.settings-menu') || 
             e.target.closest('.resume-modal') || 
-            e.target.tagName === "INPUT") {
+            e.target.tagName === "INPUT" ||
+            e.target.closest('#nextEpBtn')) {
             return;
         }
         toggleFullscreen();
