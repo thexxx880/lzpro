@@ -272,8 +272,49 @@ input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
         </div>
     </div>
 </div>
-
 <script>
+    const video = document.getElementById("video");
+    const params = new URLSearchParams(window.location.search);
+    const VIDEO_URL = decodeURIComponent(params.get('video') || '');
+    const TITLE = decodeURIComponent(params.get('title') || 'Reproduciendo');
+    const TMDB_ID = params.get('id');
+
+    // === LÓGICA DE SINCRONIZACIÓN ===
+    function syncEpisodeWithMainPage() {
+        if (!TMDB_ID) return;
+        const match = TITLE.match(/(.*?)\s*-\s*T(\d+)E(\d+)/i);
+        if (match) {
+            const data = { 
+                seriesId: TMDB_ID, 
+                season: parseInt(match[2]), 
+                episode: parseInt(match[3]), 
+                timestamp: Date.now() 
+            };
+            localStorage.setItem(`lastWatched_${TMDB_ID}`, JSON.stringify(data));
+        }
+    }
+
+    document.getElementById("exitPlayerBtn").onclick = () => window.history.back();
+    
+    document.getElementById("nextEpBtn").onclick = () => {
+        if (window.nextEpisodeData) window.location.replace(window.nextEpisodeData);
+    };
+
+    function togglePlay() {
+        video.paused ? video.play() : video.pause();
+        document.getElementById('playBtn').className = video.paused ? "fas fa-play" : "fas fa-pause";
+    }
+
+    // Inicialización
+    syncEpisodeWithMainPage();
+    if (VIDEO_URL.includes(".m3u8") && Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(VIDEO_URL);
+        hls.attachMedia(video);
+    } else {
+        video.src = VIDEO_URL;
+    }
+    document.getElementById("title-text").textContent = TITLE;
 document.addEventListener("DOMContentLoaded", () => {
     const video = document.getElementById("video");
     const playBtn = document.getElementById("playBtn");
