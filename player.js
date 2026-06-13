@@ -1,4 +1,3 @@
-// Esperar a que el DOM esté completamente cargado
 document.addEventListener("DOMContentLoaded", () => {
 
     const video = document.getElementById("video");
@@ -10,10 +9,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const currentTimeEl = document.getElementById("current");
     const totalTimeEl = document.getElementById("total");
     const backdropOverlay = document.getElementById("backdrop-overlay");
-    const settingsBtn = document.getElementById("settingsBtn");
-    const settingsMenu = document.getElementById("settings-menu");
-    const qualityContainer = document.getElementById("quality-options");
-    const qualityLoader = document.getElementById("quality-loader");
     const resumeModal = document.getElementById("resume-modal");
     const resumeText = document.getElementById("resume-text");
     const btnContinue = document.getElementById("btn-continue");
@@ -24,18 +19,97 @@ document.addEventListener("DOMContentLoaded", () => {
     let VIDEO_URL = params.get('video') ? decodeURIComponent(params.get('video')) : '';
     let POSTER_URL = params.get('poster') ? decodeURIComponent(params.get('poster')) : '';
     let TITLE = params.get('title') ? decodeURIComponent(params.get('title')) : 'Reproduciendo';
+    let TMDB_ID = params.get('id') || null;
 
     // ================= LOGICA DE LOCALSTORAGE =================
-    // Usamos el TITLE para crear una clave única. 
-    // Ej: "El juego del calamar - T1E1" se convierte en "eljuegodelcalamart1e1"
-    // Esto asegura que cada película y cada episodio tenga su propio guardado.
     const baseKey = TITLE !== 'Reproduciendo' ? TITLE : (VIDEO_URL || 'unknown');
     const STORAGE_KEY = `lzplayer_resume_${baseKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()}`;
 
     let hlsInstance = null;
     let hasStarted = false;
-    let isChangingQuality = false;
     let saveInterval = null;
+    let nextEpisodeData = null;
+
+    // ==================== CREAR BOTÓN SIGUIENTE EPISODIO ====================
+    const nextEpBtn = document.createElement("button");
+    nextEpBtn.id = "btn-next-episode";
+    nextEpBtn.innerHTML = 'Siguiente Episodio <i class="fas fa-step-forward"></i>';
+    document.body.appendChild(nextEpBtn);
+
+    // Estilos del botón
+    const style = document.createElement('style');
+    style.innerHTML = `
+        #btn-next-episode {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(229, 9, 20, 0.9);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-20px);
+            transition: all 0.4s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #btn-next-episode.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        #btn-next-episode:hover {
+            background: rgba(255, 15, 25, 1);
+            transform: scale(1.05);
+        }
+    `;
+    document.head.appendChild(style);
+
+    nextEpBtn.addEventListener("click", () => {
+        if (nextEpisodeData) {
+            window.location.href = nextEpisodeData;
+        }
+    });
+
+    // ==================== BUSCAR SIGUIENTE EPISODIO ====================
+    async function checkNextEpisode() {
+        if (!TMDB_ID || TITLE === 'Reproduciendo') return;
+
+        const match = TITLE.match(/(.*?)\s*-\s*T(\d+)E(\d+)/i);
+        if (!match) return; 
+
+        const seriesName = match[1].trim();
+        const currentSeason = parseInt(match[2], 10);
+        const currentEpisode = parseInt(match[3], 10);
+        const nextEpisodeNum = currentEpisode + 1;
+
+        const jsonUrl = `https://raw.githubusercontent.com/thexxx880/apple/main/data%20base/data/serie/${TMDB_ID}/t${currentSeason}/${TMDB_ID}.json`;
+
+        try {
+            const response = await fetch(jsonUrl);
+            if (!response.ok) return;
+            
+            const data = await response.json();
+            
+            if (data.capitulos && data.capitulos[nextEpisodeNum.toString()]) {
+                const nextVideoUrl = data.capitulos[nextEpisodeNum.toString()];
+                const posterUrl = data.backdrop || POSTER_URL; 
+                const nextTitle = `${seriesName} - T${currentSeason}E${nextEpisodeNum}`;
+                
+                nextEpisodeData = `?video=${encodeURIComponent(nextVideoUrl)}&poster=${encodeURIComponent(posterUrl)}&title=${encodeURIComponent(nextTitle)}&id=${TMDB_ID}`;
+            }
+        } catch (error) {
+            console.error("Error cargando el JSON del siguiente episodio:", error);
+        }
+    }
 
     // ==================== FULLSCREEN + FORZAR HORIZONTAL ====================
     async function forceLandscapeAndFullscreen() {
@@ -50,9 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
                 await screen.orientation.lock("landscape-primary");
             } catch (e) {
-                try {
-                    await screen.orientation.lock("landscape");
-                } catch (err) {}
+                try { await screen.orientation.lock("landscape"); } catch (err) {}
             }
         }
     }
@@ -121,16 +193,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    function rewind() {
-        video.currentTime = Math.max(0, video.currentTime - 10);
-    }
-
-    function forward() {
-        video.currentTime = Math.min(video.duration || 0, video.currentTime + 10);
-    }
+    function rewind() { video.currentTime = Math.max(0, video.currentTime - 10); }
+    function forward() { video.currentTime = Math.min(video.duration || 0, video.currentTime + 10); }
 
     function loadVideo(url) {
-        if (url.includes(".m3u8") && Hls.isSupported()) {
+        if (url.includes(".m3u8") && typeof Hls !== 'undefined' && Hls.isSupported()) {
             hlsInstance = new Hls({ enableWorker: true, lowLatencyMode: true, backBufferLength: 90 });
             hlsInstance.loadSource(url);
             hlsInstance.attachMedia(video);
@@ -145,6 +212,8 @@ document.addEventListener("DOMContentLoaded", () => {
             backdropOverlay.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url('${POSTER_URL}')`;
         }
         if (VIDEO_URL) loadVideo(VIDEO_URL);
+        
+        checkNextEpisode();
     }
 
     // ==================== INICIO ====================
@@ -168,10 +237,33 @@ document.addEventListener("DOMContentLoaded", () => {
         video.addEventListener("timeupdate", () => {
             const c = video.currentTime;
             const t = video.duration;
+            
             if (!isNaN(t) && t > 0) {
                 seek.value = (c / t) * 100;
                 currentTimeEl.textContent = formatTime(c);
+                
+                // --- NUEVA LÓGICA DE APARICIÓN DEL BOTÓN ---
+                let triggerTime = 300; // Por defecto (5 minutos)
+                
+                if (t > 2400) { 
+                    // Si dura MÁS de 40 minutos (40 * 60 = 2400s) -> Faltando 5 minutos
+                    triggerTime = 300; 
+                } else if (t < 900) { 
+                    // Si dura MENOS de 15 minutos (15 * 60 = 900s) -> Faltando 3 minutos
+                    triggerTime = 180; 
+                } else {
+                    // Si dura ENTRE 15 y 40 minutos -> Faltando 4 minutos (para equilibrar)
+                    triggerTime = 240;
+                }
+
+                const timeLeft = t - c;
+                if (timeLeft <= triggerTime && nextEpisodeData) {
+                    nextEpBtn.classList.add('show');
+                } else {
+                    nextEpBtn.classList.remove('show');
+                }
             }
+            
             if (!saveInterval) {
                 saveInterval = setInterval(saveProgress, 1000);
             }
