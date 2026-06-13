@@ -273,49 +273,7 @@ input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
     </div>
 </div>
 <script>
-    const video = document.getElementById("video");
-    const params = new URLSearchParams(window.location.search);
-    const VIDEO_URL = decodeURIComponent(params.get('video') || '');
-    const TITLE = decodeURIComponent(params.get('title') || 'Reproduciendo');
-    const TMDB_ID = params.get('id');
-
-    // === LÓGICA DE SINCRONIZACIÓN ===
-    function syncEpisodeWithMainPage() {
-        if (!TMDB_ID) return;
-        const match = TITLE.match(/(.*?)\s*-\s*T(\d+)E(\d+)/i);
-        if (match) {
-            const data = { 
-                seriesId: TMDB_ID, 
-                season: parseInt(match[2]), 
-                episode: parseInt(match[3]), 
-                timestamp: Date.now() 
-            };
-            localStorage.setItem(`lastWatched_${TMDB_ID}`, JSON.stringify(data));
-        }
-    }
-
-    document.getElementById("exitPlayerBtn").onclick = () => window.history.back();
-    
-    document.getElementById("nextEpBtn").onclick = () => {
-        if (window.nextEpisodeData) window.location.replace(window.nextEpisodeData);
-    };
-
-    function togglePlay() {
-        video.paused ? video.play() : video.pause();
-        document.getElementById('playBtn').className = video.paused ? "fas fa-play" : "fas fa-pause";
-    }
-
-    // Inicialización
-    syncEpisodeWithMainPage();
-    if (VIDEO_URL.includes(".m3u8") && Hls.isSupported()) {
-        const hls = new Hls();
-        hls.loadSource(VIDEO_URL);
-        hls.attachMedia(video);
-    } else {
-        video.src = VIDEO_URL;
-    }
-    document.getElementById("title-text").textContent = TITLE;
-document.addEventListener("DOMContentLoaded", () => {
+ document.addEventListener("DOMContentLoaded", () => {
     const video = document.getElementById("video");
     const playBtn = document.getElementById("playBtn");
     const controls = document.getElementById("controls");
@@ -336,13 +294,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const forwardBtn = document.getElementById("forwardBtn");
     const fullscreenBtn = document.getElementById("fullscreenBtn");
     const nextEpBtn = document.getElementById("nextEpBtn");
-    const exitPlayerBtn = document.getElementById("exitPlayerBtn"); // Flecha de regresar
+    const exitPlayerBtn = document.getElementById("exitPlayerBtn"); 
 
+    // ==================== PARÁMETROS URL ====================
     const params = new URLSearchParams(window.location.search);
     let VIDEO_URL = params.get('video') ? decodeURIComponent(params.get('video')) : '';
     let POSTER_URL = params.get('poster') ? decodeURIComponent(params.get('poster')) : '';
     let TITLE = params.get('title') ? decodeURIComponent(params.get('title')) : 'Reproduciendo';
     let TMDB_ID = params.get('id') || null;
+    let SEASON = params.get('s') || null;
+    let EPISODE = params.get('e') || null;
 
     const baseKey = TITLE !== 'Reproduciendo' ? TITLE : (VIDEO_URL || 'unknown');
     const STORAGE_KEY = `lzplayer_resume_${btoa(baseKey).replace(/[^a-zA-Z0-9]/g, '').slice(0, 50)}`;
@@ -353,10 +314,40 @@ document.addEventListener("DOMContentLoaded", () => {
     let saveInterval = null;
     let nextEpisodeData = null;
 
+    // ==================== LÓGICA DE SINCRONIZACIÓN AUTOMÁTICA ====================
+    function syncEpisodeWithMainPage() {
+        if (!TMDB_ID) return;
+        
+        let s = SEASON;
+        let e = EPISODE;
+        
+        // Fallback por si la url no tiene s y e (si lo leen por titulo)
+        if (!s || !e) {
+            const match = TITLE.match(/(.*?)\s*-\s*T(\d+)E(\d+)/i);
+            if (match) {
+                s = match[2];
+                e = match[3];
+            }
+        }
+
+        if (s && e) {
+            const data = { 
+                seriesId: TMDB_ID, 
+                season: parseInt(s), 
+                episode: parseInt(e), 
+                timestamp: Date.now() 
+            };
+            // Guardamos directo al localStorage que la página lee
+            localStorage.setItem(`lastWatched_${TMDB_ID}`, JSON.stringify(data));
+        }
+    }
+    
+    // 🔥 Ejecutar inmediatamente al abrir el player
+    syncEpisodeWithMainPage();
+
     // ==================== LÓGICA BOTÓN ATRÁS (SALIR) ====================
     exitPlayerBtn.addEventListener("click", (e) => {
         e.stopPropagation();
-        // Cierra la pestaña si se abrió en una nueva, o regresa atrás de forma segura
         if (window.history.length > 1) {
             window.history.back();
         } else {
@@ -368,8 +359,8 @@ document.addEventListener("DOMContentLoaded", () => {
     nextEpBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         if (nextEpisodeData) {
-            console.log("➡️ Redirigiendo al siguiente episodio...");
-            // Usamos REPLACE en lugar de HREF para que no contamine el historial
+            // Reemplaza el historial para cargar el siguiente episodio.
+            // Al recargar, syncEpisodeWithMainPage() volverá a ejecutarse automáticamente guardando el nuevo cap
             window.location.replace(nextEpisodeData);
         }
     });
@@ -377,14 +368,20 @@ document.addEventListener("DOMContentLoaded", () => {
     async function checkNextEpisode() {
         if (!TMDB_ID || TITLE === 'Reproduciendo') return;
 
-        const match = TITLE.match(/(.*?)\s*-\s*T(\d+)E(\d+)/i);
-        if (!match) return;
+        let currentSeason = parseInt(SEASON);
+        let currentEpisode = parseInt(EPISODE);
+        let seriesName = TITLE.split(' - ')[0] || 'Serie';
 
-        const seriesName = match[1].trim();
-        const currentSeason = parseInt(match[2], 10);
-        const currentEpisode = parseInt(match[3], 10);
+        // Fallback si no llegaron por parámetro
+        if (!SEASON || !EPISODE) {
+            const match = TITLE.match(/(.*?)\s*-\s*T(\d+)E(\d+)/i);
+            if (!match) return;
+            seriesName = match[1].trim();
+            currentSeason = parseInt(match[2], 10);
+            currentEpisode = parseInt(match[3], 10);
+        }
+
         const nextEpisodeNum = currentEpisode + 1;
-
         const jsonUrl = `https://raw.githubusercontent.com/thexxx880/apple/main/data%20base/data/serie/${TMDB_ID}/t${currentSeason}/${TMDB_ID}.json`;
 
         try {
@@ -398,7 +395,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 const posterUrl = data.backdrop || POSTER_URL; 
                 const nextTitle = `${seriesName} - T${currentSeason}E${nextEpisodeNum}`;
                 
-                nextEpisodeData = `?video=${encodeURIComponent(nextVideoUrl)}&poster=${encodeURIComponent(posterUrl)}&title=${encodeURIComponent(nextTitle)}&id=${TMDB_ID}`;
+                // 🔥 AQUÍ ENVIAMOS TAMBIÉN s= Y e= PARA LA PRÓXIMA CARGA 🔥
+                nextEpisodeData = `?video=${encodeURIComponent(nextVideoUrl)}&poster=${encodeURIComponent(posterUrl)}&title=${encodeURIComponent(nextTitle)}&id=${TMDB_ID}&s=${currentSeason}&e=${nextEpisodeNum}`;
                 
                 nextEpBtn.style.display = "flex";
             }
