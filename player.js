@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
+
     const video = document.getElementById("video");
     const player = document.getElementById("player");
     const playBtn = document.getElementById("playBtn");
@@ -35,116 +36,93 @@ document.addEventListener("DOMContentLoaded", () => {
     let saveInterval = null;
     let nextEpisodeData = null;
 
-    // ==================== CREAR BOTÓN SIGUIENTE EN LOS CONTROLES CENTRALES ====================
-    const centerControls = document.querySelector('.center');
-    let nextEpCenterBtn = null;
-
-    if (centerControls) {
-        nextEpCenterBtn = document.createElement("i");
-        nextEpCenterBtn.className = "fas fa-step-forward btn";
-        nextEpCenterBtn.id = "nextEpCenterBtn";
-        nextEpCenterBtn.style.display = "none";
-        nextEpCenterBtn.title = "Siguiente Episodio";
-        centerControls.appendChild(nextEpCenterBtn);
-
-        nextEpCenterBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            if (nextEpisodeData) window.location.href = nextEpisodeData;
-        });
-    }
-
-    // ==================== CREAR BOTÓN FLOTANTE (TIPO NETFLIX) ====================
-    const nextEpBtn = document.createElement("button");
-    nextEpBtn.id = "btn-next-episode-float";
-    nextEpBtn.innerHTML = 'Siguiente <i class="fas fa-step-forward"></i>';
-
-    player.appendChild(nextEpBtn);
-
-    // Estilos del botón flotante
-    const style = document.createElement('style');
-    style.innerHTML = `
-        #btn-next-episode-float {
-            position: absolute;
-            bottom: 90px;
-            right: 30px;
-            background: rgba(229, 9, 20, 0.95);
-            color: white;
-            border: none;
-            padding: 12px 26px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            z-index: 100;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(20px);
-            transition: all 0.4s ease;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.7);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        #btn-next-episode-float.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-        #btn-next-episode-float:hover {
-            background: rgba(255, 15, 25, 1);
-            transform: scale(1.08);
-        }
-    `;
-    document.head.appendChild(style);
+    // ==================== BOTÓN SIGUIENTE INTEGRADO EN CONTROLES ====================
+    // Buscamos '.center' o usamos 'controls' como respaldo
+    const centerControls = document.querySelector('.center') || controls; 
+    const nextEpBtn = document.createElement("i");
+    nextEpBtn.className = "fas fa-step-forward btn";
+    nextEpBtn.id = "nextEpCenterBtn";
+    nextEpBtn.title = "Siguiente Episodio";
+    
+    // Lo dejamos visible siempre, pero semi-transparente hasta confirmar que hay otro episodio
+    nextEpBtn.style.opacity = "0.4"; 
+    nextEpBtn.style.cursor = "not-allowed";
+    centerControls.appendChild(nextEpBtn);
 
     nextEpBtn.addEventListener("click", (e) => {
         e.stopPropagation();
-        if (nextEpisodeData) window.location.href = nextEpisodeData;
+        if (nextEpisodeData) {
+            console.log("➡️ Redirigiendo al siguiente episodio...");
+            window.location.href = nextEpisodeData;
+        } else {
+            console.log("⚠️ Clic ignorado: No hay datos del siguiente episodio cargados.");
+        }
     });
 
-    // ==================== BUSCAR SIGUIENTE EPISODIO ====================
+    // ==================== BUSCAR SIGUIENTE EPISODIO CON CONSOLE LOGS ====================
     async function checkNextEpisode() {
-        if (!TMDB_ID || TITLE === 'Reproduciendo') return;
+        console.log("=== INICIANDO BÚSQUEDA DE SIGUIENTE EPISODIO ===");
+        
+        if (!TMDB_ID || TITLE === 'Reproduciendo') {
+            console.warn("⚠️ Abortado: Faltan datos (TMDB_ID o Título no válido).", { TMDB_ID, TITLE });
+            return;
+        }
 
         const match = TITLE.match(/(.*?)\s*-\s*T(\d+)E(\d+)/i);
-        if (!match) return;
+        if (!match) {
+            console.warn("⚠️ Abortado: El formato del título no coincide con 'Serie - T#E#'. Título actual:", TITLE);
+            return;
+        } 
 
         const seriesName = match[1].trim();
         const currentSeason = parseInt(match[2], 10);
         const currentEpisode = parseInt(match[3], 10);
         const nextEpisodeNum = currentEpisode + 1;
 
+        console.log(`✅ Metadatos detectados -> Serie: "${seriesName}" | Temp: ${currentSeason} | Cap actual: ${currentEpisode} | Buscando cap: ${nextEpisodeNum}`);
+
         const jsonUrl = `https://raw.githubusercontent.com/thexxx880/apple/main/data%20base/data/serie/${TMDB_ID}/t${currentSeason}/${TMDB_ID}.json`;
+        console.log("🔍 Consultando base de datos JSON en:", jsonUrl);
 
         try {
             const response = await fetch(jsonUrl);
-            if (!response.ok) return;
-
+            if (!response.ok) {
+                console.error(`❌ Error al obtener el JSON. Estado HTTP: ${response.status}`);
+                return;
+            }
+            
             const data = await response.json();
-
+            console.log("✅ JSON cargado correctamente:", data);
+            
             if (data.capitulos && data.capitulos[nextEpisodeNum.toString()]) {
                 const nextVideoUrl = data.capitulos[nextEpisodeNum.toString()];
-                const posterUrl = data.backdrop || POSTER_URL;
+                const posterUrl = data.backdrop || POSTER_URL; 
                 const nextTitle = `${seriesName} - T${currentSeason}E${nextEpisodeNum}`;
-
+                
                 nextEpisodeData = `?video=${encodeURIComponent(nextVideoUrl)}&poster=${encodeURIComponent(posterUrl)}&title=${encodeURIComponent(nextTitle)}&id=${TMDB_ID}`;
-
-                // Mostrar botón central
-                if (nextEpCenterBtn) {
-                    nextEpCenterBtn.style.display = "block";
-                }
+                
+                // Activar visualmente el botón porque SÍ hay episodio
+                nextEpBtn.style.opacity = "1";
+                nextEpBtn.style.cursor = "pointer";
+                console.log(`🎉 ¡ÉXITO! Siguiente episodio encontrado preparado: ${nextTitle}`);
+            } else {
+                console.warn(`🛑 Fin de temporada o datos faltantes: No se encontró el capítulo ${nextEpisodeNum} en el JSON.`);
             }
         } catch (error) {
-            console.error("LzPlay Error al buscar siguiente episodio:", error);
+            console.error("❌ Error crítico durante la petición fetch:", error);
         }
     }
 
-    // ==================== FULLSCREEN ====================
+    // ==================== FULLSCREEN ROBUSTO ====================
     function toggleFullscreen() {
         if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
-            player.requestFullscreen?.() || player.webkitRequestFullscreen?.() || player.msRequestFullscreen?.();
+            if (player.requestFullscreen) player.requestFullscreen();
+            else if (player.webkitRequestFullscreen) player.webkitRequestFullscreen();
+            else if (player.msRequestFullscreen) player.msRequestFullscreen();
         } else {
-            document.exitFullscreen?.() || document.webkitExitFullscreen?.() || document.msExitFullscreen?.();
+            if (document.exitFullscreen) document.exitFullscreen();
+            else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+            else if (document.msExitFullscreen) document.msExitFullscreen();
         }
     }
 
@@ -157,8 +135,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (e.target.closest('.controls') || 
             e.target.closest('.settings-menu') || 
             e.target.closest('.resume-modal') || 
-            e.target.closest('#btn-next-episode-float') ||
-            e.target.tagName === "INPUT") return;
+            e.target.tagName === "INPUT") {
+            return;
+        }
         toggleFullscreen();
     });
 
@@ -166,18 +145,17 @@ document.addEventListener("DOMContentLoaded", () => {
         const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
         fullscreenBtn.className = isFullscreen ? "fas fa-compress btn" : "fas fa-expand btn";
     }
-
     document.addEventListener("fullscreenchange", updateFullscreenIcon);
     document.addEventListener("webkitfullscreenchange", updateFullscreenIcon);
     document.addEventListener("msfullscreenchange", updateFullscreenIcon);
 
     // ==================== FORMATO TIEMPO ====================
     function formatTime(seconds) {
-        if (!seconds || isNaN(seconds)) return "00:00";
+        if (!seconds || isNaN(seconds)) return "00:00:00";
         const h = Math.floor(seconds / 3600);
         const m = Math.floor((seconds % 3600) / 60);
         const s = Math.floor(seconds % 60);
-        return h > 0 ? `${h}:${m < 10 ? "0" + m : m}:${s < 10 ? "0" + s : s}` : `${m}:${s < 10 ? "0" + s : s}`;
+        return `${h}:${m < 10 ? "0" + m : m}:${s < 10 ? "0" + s : s}`;
     }
 
     function updateTotalTime() {
@@ -192,61 +170,74 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // ==================== LÓGICA DEL BOTÓN FLOTANTE =================
-    function updateNextEpisodeButton() {
-        if (!nextEpisodeData) return;
-
-        const c = video.currentTime;
-        const t = video.duration;
-        if (!t || isNaN(t)) return;
-
-        let triggerTime = 180;
-        if (t > 2400) triggerTime = 300;
-        else if (t < 900) triggerTime = 60;
-
-        const timeLeft = t - c;
-
-        if (timeLeft <= triggerTime) {
-            nextEpBtn.classList.add('show');
-        } else {
-            nextEpBtn.classList.remove('show');
+    function loadSavedProgress() {
+        if (!VIDEO_URL) return;
+        const savedTime = parseFloat(localStorage.getItem(STORAGE_KEY));
+        if (savedTime && savedTime > 10) {
+            resumeText.innerHTML = `Te quedaste en <strong>${formatTime(savedTime)}</strong>.<br>¿Quieres continuar desde ahí?`;
+            resumeModal.classList.add("show");
+            btnContinue.onclick = () => {
+                video.currentTime = savedTime;
+                resumeModal.classList.remove("show");
+                hideBackdropAndShowVideo();
+                hasStarted = true;
+                video.play();
+            };
+            btnRestart.onclick = () => {
+                localStorage.removeItem(STORAGE_KEY);
+                resumeModal.classList.remove("show");
+                hideBackdropAndShowVideo();
+                hasStarted = true;
+                video.play();
+            };
         }
     }
 
-    // ==================== EVENTOS ====================
+    function loadMetadata() {
+        titleEl.textContent = TITLE || "Reproduciendo";
+        if (POSTER_URL) {
+            backdropOverlay.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url('${POSTER_URL}')`;
+        } else {
+            backdropOverlay.style.background = '#111';
+        }
+        if (VIDEO_URL) loadVideo(VIDEO_URL);
+        
+        checkNextEpisode(); 
+    }
+
+    function loadVideo(url) {
+        if (url.includes(".m3u8") && Hls.isSupported()) {
+            hlsInstance = new Hls({ enableWorker: true, lowLatencyMode: true, backBufferLength: 90 });
+            hlsInstance.loadSource(url);
+            hlsInstance.attachMedia(video);
+        } else {
+            video.src = url;
+        }
+    }
+
+    video.addEventListener("waiting", () => { if (isChangingQuality) qualityLoader.classList.add("show"); });
+    video.addEventListener("playing", () => { 
+        if (isChangingQuality) {
+            qualityLoader.classList.remove("show");
+            isChangingQuality = false;
+        }
+    });
+
+    // ==================== ACTUALIZAR TIEMPO Y PROGRESO ====================
     video.addEventListener("timeupdate", () => {
         const c = video.currentTime;
         const t = video.duration;
-
+        
         if (!isNaN(t) && t > 0) {
             seek.value = (c / t) * 100;
             currentTimeEl.textContent = formatTime(c);
-            updateNextEpisodeButton();
         }
-
+        
         if (!saveInterval && video.duration) {
             saveInterval = setInterval(saveProgress, 1000);
         }
     });
 
-    function showControls(fast = false) {
-        controls.classList.remove("hide");
-        updateNextEpisodeButton();
-
-        clearTimeout(hideTimeout);
-        hideTimeout = setTimeout(() => {
-            if (!video.paused) {
-                controls.classList.add("hide");
-                nextEpBtn.classList.remove('show');
-            }
-        }, fast ? 900 : 3500);
-    }
-
-    let hideTimeout;
-    document.addEventListener("mousemove", () => showControls(false));
-    document.addEventListener("touchstart", () => showControls(false));
-
-    // ==================== OTRAS FUNCIONES ====================
     function hideBackdropAndShowVideo() {
         backdropOverlay.style.transition = "opacity 0.6s ease";
         backdropOverlay.style.opacity = "0";
@@ -279,35 +270,116 @@ document.addEventListener("DOMContentLoaded", () => {
         video.currentTime = Math.min(video.duration || 0, video.currentTime + 10);
     }
 
-    // Cargar metadata y siguiente episodio
-    function loadMetadata() {
-        titleEl.textContent = TITLE || "Reproduciendo";
-        if (POSTER_URL) {
-            backdropOverlay.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url('${POSTER_URL}')`;
-        }
+    settingsBtn.addEventListener("click", (e) => {
+        e.stopImmediatePropagation();
+        settingsMenu.classList.toggle("show");
+        settingsBtn.classList.toggle("settings-btn-active");
+        if (settingsMenu.classList.contains("show") && hlsInstance) loadQualityOptions();
+    });
 
-        if (VIDEO_URL) loadVideo(VIDEO_URL);
-        checkNextEpisode(); // ← Muy importante
+    document.addEventListener("click", (e) => {
+        if (!settingsMenu.contains(e.target) && e.target !== settingsBtn) {
+            settingsMenu.classList.remove("show");
+            settingsBtn.classList.remove("settings-btn-active");
+        }
+    });
+
+    function loadQualityOptions() { 
+        qualityContainer.innerHTML = "";
+        if (!hlsInstance || !hlsInstance.levels.length) {
+            qualityContainer.innerHTML = `<div class="quality-option">No hay calidades disponibles</div>`;
+            return;
+        }
+        let bestLevelIndex = 0;
+        let maxHeight = 0;
+        hlsInstance.levels.forEach((level, i) => {
+            if (level.height > maxHeight) { maxHeight = level.height; bestLevelIndex = i; }
+        });
+        const autoOption = createQualityOption("Auto (Recomendado)", -1, hlsInstance.currentLevel === -1);
+        qualityContainer.appendChild(autoOption);
+        const sortedLevels = [...hlsInstance.levels].map((level, index) => ({...level, originalIndex: index})).sort((a, b) => b.height - a.height);
+        sortedLevels.forEach((level) => {
+            const label = `${level.height}p`;
+            const isActive = hlsInstance.currentLevel === level.originalIndex;
+            const isRecommended = level.originalIndex === bestLevelIndex;
+            const option = createQualityOption(label, level.originalIndex, isActive, isRecommended);
+            qualityContainer.appendChild(option);
+        });
     }
 
-    function loadVideo(url) {
-        if (url.includes(".m3u8") && typeof Hls !== "undefined" && Hls.isSupported()) {
-            hlsInstance = new Hls({ enableWorker: true, lowLatencyMode: true, backBufferLength: 90 });
-            hlsInstance.loadSource(url);
-            hlsInstance.attachMedia(video);
-        } else {
-            video.src = url;
-        }
+    function createQualityOption(label, levelIndex, isActive, isRecommended = false) {
+        const div = document.createElement("div");
+        div.className = `quality-option ${isActive ? "active" : ""}`;
+        let html = label;
+        if (isRecommended) html += `<span class="recommended">Recomendada</span>`;
+        if (isActive) html += `<i class="fas fa-check check"></i>`;
+        div.innerHTML = html;
+        div.addEventListener("click", () => {
+            if (!hlsInstance) return;
+            isChangingQuality = true;
+            qualityLoader.classList.add("show");
+            settingsMenu.classList.remove("show");
+            settingsBtn.classList.remove("settings-btn-active");
+            hlsInstance.currentLevel = levelIndex;
+            setTimeout(() => {
+                if (isChangingQuality) {
+                    qualityLoader.classList.remove("show");
+                    isChangingQuality = false;
+                }
+            }, 12000);
+        });
+        return div;
     }
 
-    // Inicialización
+    video.addEventListener("play", () => { playBtn.className = "fas fa-pause btn big"; });
+    video.addEventListener("pause", () => { playBtn.className = "fas fa-play btn big"; });
+
+    seek.addEventListener("input", () => {
+        if (video.duration) video.currentTime = (seek.value / 100) * video.duration;
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.target.tagName === "INPUT") return;
+        if (e.code === "Space") { e.preventDefault(); togglePlay(); }
+        if (e.code === "ArrowLeft") rewind();
+        if (e.code === "ArrowRight") forward();
+    });
+
+    // ==================== LÓGICA MOSTRAR/OCULTAR CONTROLES ====================
+    let hideTimeout;
+    function showControls(fast = false) {
+        controls.classList.remove("hide");
+
+        clearTimeout(hideTimeout);
+        hideTimeout = setTimeout(() => {
+            if (!video.paused) {
+                controls.classList.add("hide");
+            }
+        }, fast ? 900 : 3500);
+    }
+    
+    document.addEventListener("mousemove", () => showControls(false));
+    document.addEventListener("touchstart", () => showControls(false));
+    video.addEventListener("click", togglePlay);
+
+    let lastTapTime = 0;
+    video.addEventListener("touchend", (e) => {
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTapTime;
+        if (tapLength < 350 && tapLength > 0) {
+            e.preventDefault();
+            toggleFullscreen();
+        }
+        lastTapTime = currentTime;
+    });
+
     function initPlayer() {
         loadMetadata();
         video.addEventListener("loadedmetadata", () => {
             updateTotalTime();
+            loadSavedProgress();
         });
         video.addEventListener("durationchange", updateTotalTime);
     }
-
     initPlayer();
 });
