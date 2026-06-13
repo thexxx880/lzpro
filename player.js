@@ -25,7 +25,12 @@ document.addEventListener("DOMContentLoaded", () => {
     let POSTER_URL = params.get('poster') ? decodeURIComponent(params.get('poster')) : '';
     let TITLE = params.get('title') ? decodeURIComponent(params.get('title')) : 'Reproduciendo';
 
-    const STORAGE_KEY = `lzplayer_resume_${btoa(VIDEO_URL || 'unknown').replace(/[^a-zA-Z0-9]/g, '').slice(0, 50)}`;
+    // ================= LOGICA DE LOCALSTORAGE =================
+    // Usamos el TITLE para crear una clave única. 
+    // Ej: "El juego del calamar - T1E1" se convierte en "eljuegodelcalamart1e1"
+    // Esto asegura que cada película y cada episodio tenga su propio guardado.
+    const baseKey = TITLE !== 'Reproduciendo' ? TITLE : (VIDEO_URL || 'unknown');
+    const STORAGE_KEY = `lzplayer_resume_${baseKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()}`;
 
     let hlsInstance = null;
     let hasStarted = false;
