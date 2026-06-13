@@ -75,6 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     nextEpBtn.addEventListener("click", () => {
         if (nextEpisodeData) {
+            // Al hacer clic, redirige a la misma página del player pero con los nuevos parámetros
             window.location.href = nextEpisodeData;
         }
     });
@@ -83,6 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
     async function checkNextEpisode() {
         if (!TMDB_ID || TITLE === 'Reproduciendo') return;
 
+        // Extraer nombre de la serie, temporada y episodio del título (Ej: "Brandy Y El Sr. Bigotes - T1E1")
         const match = TITLE.match(/(.*?)\s*-\s*T(\d+)E(\d+)/i);
         if (!match) return; 
 
@@ -91,23 +93,33 @@ document.addEventListener("DOMContentLoaded", () => {
         const currentEpisode = parseInt(match[3], 10);
         const nextEpisodeNum = currentEpisode + 1;
 
+        // Construir URL del JSON en GitHub
         const jsonUrl = `https://raw.githubusercontent.com/thexxx880/apple/main/data%20base/data/serie/${TMDB_ID}/t${currentSeason}/${TMDB_ID}.json`;
 
         try {
             const response = await fetch(jsonUrl);
-            if (!response.ok) return;
+            if (!response.ok) {
+                console.error("LzPlay: No se pudo cargar el JSON de la serie desde", jsonUrl);
+                return;
+            }
             
             const data = await response.json();
             
+            // Verificar si existe la llave "capitulos" y dentro de ella el número del siguiente episodio
             if (data.capitulos && data.capitulos[nextEpisodeNum.toString()]) {
                 const nextVideoUrl = data.capitulos[nextEpisodeNum.toString()];
                 const posterUrl = data.backdrop || POSTER_URL; 
                 const nextTitle = `${seriesName} - T${currentSeason}E${nextEpisodeNum}`;
                 
+                // Generar los parámetros (relativos) para la recarga del reproductor
                 nextEpisodeData = `?video=${encodeURIComponent(nextVideoUrl)}&poster=${encodeURIComponent(posterUrl)}&title=${encodeURIComponent(nextTitle)}&id=${TMDB_ID}`;
+                
+                console.log(`LzPlay: Siguiente episodio cargado en segundo plano -> T${currentSeason}E${nextEpisodeNum}`);
+            } else {
+                console.log(`LzPlay: No hay un episodio ${nextEpisodeNum} en la temporada ${currentSeason}.`);
             }
         } catch (error) {
-            console.error("Error cargando el JSON del siguiente episodio:", error);
+            console.error("LzPlay: Error procesando el JSON del siguiente episodio:", error);
         }
     }
 
@@ -242,7 +254,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 seek.value = (c / t) * 100;
                 currentTimeEl.textContent = formatTime(c);
                 
-                // --- NUEVA LÓGICA DE APARICIÓN DEL BOTÓN ---
+                // --- LÓGICA DE APARICIÓN DEL BOTÓN ---
                 let triggerTime = 300; // Por defecto (5 minutos)
                 
                 if (t > 2400) { 
@@ -252,11 +264,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     // Si dura MENOS de 15 minutos (15 * 60 = 900s) -> Faltando 3 minutos
                     triggerTime = 180; 
                 } else {
-                    // Si dura ENTRE 15 y 40 minutos -> Faltando 4 minutos (para equilibrar)
+                    // Si dura ENTRE 15 y 40 minutos -> Faltando 4 minutos
                     triggerTime = 240;
                 }
 
                 const timeLeft = t - c;
+                
+                // Mostrar el botón si falta el tiempo establecido Y se encontró siguiente episodio
                 if (timeLeft <= triggerTime && nextEpisodeData) {
                     nextEpBtn.classList.add('show');
                 } else {
