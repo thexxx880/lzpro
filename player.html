@@ -274,6 +274,34 @@ input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
 </div>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
+    // 🔥 NUEVO: ESTILOS PARA EL SCROLL DEL MENÚ (Inyectados directamente vía JS)
+    const style = document.createElement("style");
+    style.innerHTML = `
+        #settings-menu {
+            max-height: 50vh; /* Ocupa como máximo el 50% de la pantalla para no salirse del video */
+            overflow-y: auto; /* Habilita el scroll vertical */
+            overflow-x: hidden; /* Oculta el scroll horizontal */
+            overscroll-behavior: contain; /* Evita que al hacer scroll se mueva la página de fondo */
+            scrollbar-width: thin; /* Para Firefox */
+            scrollbar-color: rgba(255, 255, 255, 0.4) transparent;
+        }
+        /* Estilizado de la barra de scroll para navegadores basados en WebKit (Chrome, Edge, Safari) */
+        #settings-menu::-webkit-scrollbar {
+            width: 6px;
+        }
+        #settings-menu::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #settings-menu::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 10px;
+        }
+        #settings-menu::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.7);
+        }
+    `;
+    document.head.appendChild(style);
+
     const video = document.getElementById("video");
     
     // 🔥 FORZAR AJUSTE ORIGINAL POR DEFECTO
