@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LzPlayer PRO</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="icon" href="data:,">
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<style>
+:root { --primary: #00d4ff; }
+body {
+    margin: 0; background: #000; font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden;
+}
+#player {
+    position: relative; width: 100%; height: 100vh; background: #000; overflow: hidden;
+}
+#backdrop-overlay {
+    position: absolute; inset: 0; z-index: 1;
+    background-size: cover; background-position: center; transition: opacity 0.6s ease;
+}
+video {
+    width: 100%; height: 100%; object-fit: contain; position: relative; z-index: 2;
+    opacity: 0; transition: opacity 0.6s ease;
+}
+.controls {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    justify-content: space-between; padding: 25px 30px;
+    background: linear-gradient(to top, rgba(0,0,0,.85) 0%, transparent 40%);
+    z-index: 3; transition: opacity 0.4s ease;
+}
+.controls.hide { opacity: 0; pointer-events: none; }
+.top {
+    color: #fff; font-size: 22px; font-weight: 700; text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    display: flex; align-items: center; justify-content: space-between;
+}
+.top-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* --- BOTÓN DE REGRESAR (FLECHA) --- */
+.back-btn {
+    font-size: 24px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+.back-btn:hover {
+    color: var(--primary);
+    transform: scale(1.15);
+}
+.back-btn:active {
+    transform: scale(0.9);
+}
+
+/* --- BOTÓN SIGUIENTE EPISODIO ESTILO NETFLIX --- */
+.next-ep-btn {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background-color: rgba(20, 20, 20, 0.75);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    padding: 8px 18px;
+    border-radius: 4px;
+    font-size: 15px;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.next-ep-btn i {
+    font-size: 14px;
+}
+.next-ep-btn:hover {
+    background-color: #fff;
+    color: #000;
+    border-color: #fff;
+    transform: scale(1.05);
+}
+
+.center { display: flex; justify-content: center; align-items: center; gap: 40px; }
+.btn { 
+    color: #fff; font-size: 26px; cursor: pointer; transition: all 0.2s ease; 
+    text-shadow: 0 2px 6px rgba(0,0,0,0.5); 
+}
+.btn:hover { color: var(--primary); transform: scale(1.15); }
+.btn.big { 
+    font-size: 68px; 
+    transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1); 
+}
+.btn:active { transform: scale(0.88); }
+
+.btn-rewind { animation: rotateRewind 400ms ease forwards; }
+.btn-forward { animation: rotateForward 400ms ease forwards; }
+
+@keyframes rotateRewind {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(-55deg); }
+}
+@keyframes rotateForward {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(55deg); }
+}
+
+.settings-btn-active {
+    animation: gearSpin 600ms ease;
+}
+@keyframes gearSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(180deg); }
+}
+
+.bottom { display: flex; align-items: center; gap: 12px; color: #fff; }
+.bottom span { font-size: 13px; font-variant-numeric: tabular-nums; min-width: 60px; text-align: center; }
+input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
+
+/* MENÚ CONFIGURACIÓN */
+.settings-menu {
+    position: absolute; bottom: 75px; right: 30px;
+    background: rgba(20,20,20,0.95); border-radius: 12px; padding: 12px 0;
+    min-width: 240px; box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.1); z-index: 10; display: none; flex-direction: column;
+}
+.settings-menu.show { display: flex; }
+.settings-header { padding: 8px 18px; font-size: 14px; font-weight: 600; color: #aaa; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 6px; }
+.quality-option {
+    padding: 11px 18px; font-size: 14px; color: #fff; cursor: pointer;
+    transition: background 0.2s; display: flex; align-items: center; gap: 10px;
+}
+.quality-option:hover { background: rgba(255,255,255,0.08); }
+.quality-option.active { color: var(--primary); font-weight: 600; }
+.quality-option .check { margin-left: auto; color: var(--primary); }
+.quality-option .recommended {
+    font-size: 11px; background: var(--primary); color: #000; padding: 1px 7px;
+    border-radius: 10px; margin-left: 8px; font-weight: 600;
+}
+
+/* LOADER */
+.quality-loader {
+    position: absolute; inset: 0; z-index: 5;
+    background: rgba(0,0,0,0.7);
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    color: #fff; gap: 14px;
+}
+.quality-loader.show { display: flex; }
+.spinner {
+    width: 46px; height: 46px;
+    border: 5px solid rgba(255,255,255,0.2);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* MODAL REANUDAR */
+.resume-modal {
+    position: absolute; inset: 0; z-index: 10;
+    background: rgba(0,0,0,0.85);
+    display: none; align-items: center; justify-content: center;
+}
+.resume-modal.show { display: flex; }
+.resume-content {
+    background: #1a1a1a;
+    padding: 30px 35px;
+    border-radius: 16px;
+    text-align: center;
+    max-width: 420px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.resume-content p {
+    color: #fff;
+    font-size: 17px;
+    margin-bottom: 25px;
+    line-height: 1.4;
+}
+.resume-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+.resume-buttons button {
+    padding: 12px 28px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+#btn-continue {
+    background: var(--primary);
+    color: #000;
+}
+#btn-continue:hover {
+    background: #00b8e6;
+}
+#btn-restart {
+    background: #333;
+    color: #fff;
+}
+#btn-restart:hover {
+    background: #444;
+}
+
+@media (max-width: 768px) {
+    .btn.big { font-size: 48px; } 
+    .btn { font-size: 22px; } 
+    .top { font-size: 17px; flex-direction: column; align-items: flex-start; gap: 10px; }
+    .next-ep-btn { align-self: flex-end; font-size: 13px; padding: 6px 12px; }
+    .controls { padding: 18px 20px; }
+    .settings-menu { right: 20px; min-width: 210px; }
+    .resume-content { margin: 0 15px; padding: 25px; }
+}
+</style>
+</head>
+<body>
+<div id="player">
+    <div id="backdrop-overlay"></div>
+    <video id="video" playsinline></video>
+ 
+    <div id="quality-loader" class="quality-loader">
+        <div class="spinner"></div>
+        <span>Cambiando calidad...</span>
+    </div>
+  
+    <div class="controls" id="controls">
+        <div class="top" id="title">
+            <div class="top-left">
+                <i class="fas fa-arrow-left back-btn" id="exitPlayerBtn" title="Regresar al contenido"></i>
+                <span id="title-text">Cargando...</span>
+            </div>
+            <button id="nextEpBtn" class="next-ep-btn" title="Ir al siguiente episodio">
+                Siguiente episodio <i class="fas fa-step-forward"></i>
+            </button>
+        </div>
+      
+        <div class="center">
+            <i class="fas fa-rotate-left btn" id="rewindBtn" onclick="rewind()"></i>
+            <i class="fas fa-play btn big" id="playBtn" onclick="togglePlay()"></i>
+            <i class="fas fa-rotate-right btn" id="forwardBtn" onclick="forward()"></i>
+        </div>
+      
+        <div class="bottom">
+            <span id="current">00:00:00</span>
+            <input type="range" id="seek" value="0" min="0" max="100" step="0.1">
+            <span id="total">00:00:00</span>
+            <i class="fas fa-cog btn" id="settingsBtn" title="Configuración"></i>
+            <i class="fas fa-expand btn" id="fullscreenBtn" title="Pantalla completa"></i>
+        </div>
+    </div>
+  
+    <div id="settings-menu" class="settings-menu">
+        <div class="settings-header">Calidad de video</div>
+        <div id="quality-options"></div>
+    </div>
+  
+    <div id="resume-modal" class="resume-modal">
+        <div class="resume-content">
+            <p id="resume-text">Te quedaste en 00:00:00.<br>¿Quieres continuar desde ahí?</p>
+            <div class="resume-buttons">
+                <button id="btn-continue">Sí, continuar</button>
+                <button id="btn-restart">No, empezar desde el principio</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    // 🔥 NUEVO: ESTILOS PARA EL SCROLL DEL MENÚ
+    const style = document.createElement("style");
+    style.innerHTML = `
+        #settings-menu {
+            max-height: 50vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            overscroll-behavior: contain;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.4) transparent;
+        }
+        #settings-menu::-webkit-scrollbar {
+            width: 6px;
+        }
+        #settings-menu::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #settings-menu::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 10px;
+        }
+        #settings-menu::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.7);
+        }
+    `;
+    document.head.appendChild(style);
+
+    const video = document.getElementById("video");
+    
+    // 🔥 FORZAR AJUSTE ORIGINAL POR DEFECTO
+    video.style.objectFit = "contain";
+    
+    const playBtn = document.getElementById("playBtn");
+    const controls = document.getElementById("controls");
+    const seek = document.getElementById("seek");
+    const titleEl = document.getElementById("title-text");
+    const currentTimeEl = document.getElementById("current");
+    const totalTimeEl = document.getElementById("total");
+    const backdropOverlay = document.getElementById("backdrop-overlay");
+    const settingsBtn = document.getElementById("settingsBtn");
+    const settingsMenu = document.getElementById("settings-menu");
+    const qualityContainer = document.getElementById("quality-options");
+    const qualityLoader = document.getElementById("quality-loader");
+    const resumeModal = document.getElementById("resume-modal");
+    const resumeText = document.getElementById("resume-text");
+    const btnContinue = document.getElementById("btn-continue");
+    const btnRestart = document.getElementById("btn-restart");
+    const rewindBtn = document.getElementById("rewindBtn");
+    const forwardBtn = document.getElementById("forwardBtn");
+    const fullscreenBtn = document.getElementById("fullscreenBtn");
+    const nextEpBtn = document.getElementById("nextEpBtn");
+    const exitPlayerBtn = document.getElementById("exitPlayerBtn"); 
+
+    // ==================== PARÁMETROS URL ====================
+    const params = new URLSearchParams(window.location.search);
+    let VIDEO_URL = params.get('video') ? decodeURIComponent(params.get('video')) : '';
+    let POSTER_URL = params.get('poster') ? decodeURIComponent(params.get('poster')) : '';
+    let TITLE = params.get('title') ? decodeURIComponent(params.get('title')) : 'Reproduciendo';
+    let TMDB_ID = params.get('id') || null;
+    let SEASON = params.get('s') || null;
+    let EPISODE = params.get('e') || null;
+
+    const baseKey = TITLE !== 'Reproduciendo' ? TITLE : (VIDEO_URL || 'unknown');
+    const STORAGE_KEY = `lzplayer_resume_${btoa(baseKey).replace(/[^a-zA-Z0-9]/g, '').slice(0, 50)}`;
+
+    let hlsInstance = null;
+    let hasStarted = false;
+    let isChangingQuality = false;
+    let saveInterval = null;
+    let nextEpisodeData = null;
+
+    // ==================== LÓGICA DE EXTRACCIÓN DE ENLACES EXTERNOS ====================
+    
+    // Regex para detectar los servidores que mencionaste
+    const HOSTS_REGEX = /(streamwish\.to|vidhidepro\.com|voe\.sx|nzn3\.org|doodstream\.com)/i;
+
+    async function extractDirectVideoURL(url) {
+        // 🔥 IMPORTANTE: Aquí es donde debes conectar tu API backend.
+        // Como los navegadores bloquean el escaneo de estas webs por CORS,
+        // necesitas hacer una petición a un servidor propio que devuelva el .mp4
+        
+        console.warn(`[API REQUERIDA] Intentando resolver enlace de servidor externo: ${url}`);
+        
+        /* EJEMPLO DE CÓMO SERÍA CON TU BACKEND:
+        try {
+            const response = await fetch(`https://tu-api.com/extraer?url=${encodeURIComponent(url)}`);
+            const data = await response.json();
+            if(data.direct_url) return data.direct_url;
+        } catch(e) {
+            console.error("Error en la API extractora:", e);
+        }
+        */
+
+        // Por ahora, retornamos la misma URL (Esto fallará si intentas meter un link de Voe directo al <video>)
+        return url; 
+    }
+
+    async function processAndLoadVideo(url) {
+        if (!url) return;
+
+        // Si es un enlace de servidor externo
+        if (HOSTS_REGEX.test(url)) {
+            // Mostramos el loader de calidad (puedes crear uno específico de carga inicial si prefieres)
+            qualityLoader.classList.add("show"); 
+            
+            try {
+                // Esperamos a que la API resuelva el enlace directo
+                const directUrl = await extractDirectVideoURL(url);
+                loadDirectStream(directUrl);
+            } catch (error) {
+                console.error("❌ Error resolviendo el enlace externo:", error);
+                titleEl.textContent = "Error al cargar el video del servidor.";
+            } finally {
+                qualityLoader.classList.remove("show");
+            }
+        } else {
+            // Si es un enlace directo (.mp4, .m3u8) normal
+            loadDirectStream(url);
+        }
+    }
+
+    function loadDirectStream(url) {
+        if (url.includes(".m3u8") && Hls.isSupported()) {
+            hlsInstance = new Hls({ enableWorker: true, lowLatencyMode: true, backBufferLength: 90 });
+            hlsInstance.loadSource(url);
+            hlsInstance.attachMedia(video);
+        } else {
+            video.src = url;
+        }
+    }
+
+    // ==================== LÓGICA DE SINCRONIZACIÓN AUTOMÁTICA ====================
+    function syncEpisodeWithMainPage() {
+        if (!TMDB_ID) return;
+        
+        let s = SEASON;
+        let e = EPISODE;
+        
+        if (!s || !e) {
+            const match = TITLE.match(/(.*?)\s*-\s*T(\d+)E(\d+)/i);
+            if (match) {
+                s = match[2];
+                e = match[3];
+            }
+        }
+
+        if (s && e) {
+            const data = { 
+                seriesId: TMDB_ID, 
+                season: parseInt(s), 
+                episode: parseInt(e), 
+                timestamp: Date.now() 
+            };
+            localStorage.setItem(`lastWatched_${TMDB_ID}`, JSON.stringify(data));
+        }
+    }
+    
+    syncEpisodeWithMainPage();
+
+    // ==================== LÓGICA BOTÓN ATRÁS (SALIR) ====================
+    exitPlayerBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (window.history.length > 1) {
+            window.history.back();
+        } else {
+            window.close();
+        }
+    });
+
+    // ==================== LÓGICA BOTÓN SIGUIENTE ====================
+    nextEpBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (nextEpisodeData) {
+            window.location.replace(nextEpisodeData);
+        }
+    });
+
+    async function checkNextEpisode() {
+        if (!TMDB_ID || TITLE === 'Reproduciendo') return;
+
+        let currentSeason = parseInt(SEASON);
+        let currentEpisode = parseInt(EPISODE);
+        let seriesName = TITLE.split(' - ')[0] || 'Serie';
+
+        if (!SEASON || !EPISODE) {
+            const match = TITLE.match(/(.*?)\s*-\s*T(\d+)E(\d+)/i);
+            if (!match) return;
+            seriesName = match[1].trim();
+            currentSeason = parseInt(match[2], 10);
+            currentEpisode = parseInt(match[3], 10);
+        }
+
+        const nextEpisodeNum = currentEpisode + 1;
+        const jsonUrl = `https://raw.githubusercontent.com/thexxx880/apple/main/data%20base/data/serie/${TMDB_ID}/t${currentSeason}/${TMDB_ID}.json`;
+
+        try {
+            const response = await fetch(jsonUrl);
+            if (!response.ok) return; 
+            
+            const data = await response.json();
+            
+            if (data.capitulos && data.capitulos[nextEpisodeNum.toString()]) {
+                const nextVideoUrl = data.capitulos[nextEpisodeNum.toString()];
+                const posterUrl = data.backdrop || POSTER_URL; 
+                const nextTitle = `${seriesName} - T${currentSeason}E${nextEpisodeNum}`;
+                
+                nextEpisodeData = `?video=${encodeURIComponent(nextVideoUrl)}&poster=${encodeURIComponent(posterUrl)}&title=${encodeURIComponent(nextTitle)}&id=${TMDB_ID}&s=${currentSeason}&e=${nextEpisodeNum}`;
+                
+                nextEpBtn.style.display = "flex";
+            }
+        } catch (error) {
+            console.error("❌ Error fetch:", error);
+        }
+    }
+
+    // ==================== FULLSCREEN ROBUSTO ====================
+    const playerContainer = document.getElementById("player");
+
+    function toggleFullscreen() {
+        if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+            if (playerContainer.requestFullscreen) playerContainer.requestFullscreen();
+            else if (playerContainer.webkitRequestFullscreen) playerContainer.webkitRequestFullscreen();
+            else if (playerContainer.msRequestFullscreen) playerContainer.msRequestFullscreen();
+        } else {
+            if (document.exitFullscreen) document.exitFullscreen();
+            else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+            else if (document.msExitFullscreen) document.msExitFullscreen();
+        }
+    }
+
+    fullscreenBtn.addEventListener("click", (e) => {
+        e.stopImmediatePropagation();
+        toggleFullscreen();
+    });
+
+    playerContainer.addEventListener("dblclick", (e) => {
+        if (e.target.closest('.controls') || 
+            e.target.closest('.settings-menu') || 
+            e.target.closest('.resume-modal') || 
+            e.target.tagName === "INPUT" ||
+            e.target.closest('#nextEpBtn') ||
+            e.target.closest('#exitPlayerBtn')) {
+            return;
+        }
+        toggleFullscreen();
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.code === "KeyF") {
+            e.preventDefault();
+            toggleFullscreen();
+        }
+    });
+
+    function updateFullscreenIcon() {
+        const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+        fullscreenBtn.className = isFullscreen ? "fas fa-compress btn" : "fas fa-expand btn";
+    }
+    document.addEventListener("fullscreenchange", updateFullscreenIcon);
+    document.addEventListener("webkitfullscreenchange", updateFullscreenIcon);
+    document.addEventListener("msfullscreenchange", updateFullscreenIcon);
+
+    // ==================== FORMATO TIEMPO ====================
+    function formatTime(seconds) {
+        if (!seconds || isNaN(seconds)) return "00:00:00";
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = Math.floor(seconds % 60);
+        return `${h}:${m < 10 ? "0" + m : m}:${s < 10 ? "0" + s : s}`;
+    }
+
+    function updateTotalTime() {
+        if (video.duration && !isNaN(video.duration)) {
+            totalTimeEl.textContent = formatTime(video.duration);
+        }
+    }
+
+    function saveProgress() {
+        if (video.currentTime > 5 && VIDEO_URL) {
+            localStorage.setItem(STORAGE_KEY, video.currentTime);
+        }
+    }
+
+    function loadSavedProgress() {
+        if (!VIDEO_URL) return;
+        const savedTime = parseFloat(localStorage.getItem(STORAGE_KEY));
+        if (savedTime && savedTime > 10) {
+            resumeText.innerHTML = `Te quedaste en <strong>${formatTime(savedTime)}</strong>.<br>¿Quieres continuar desde ahí?`;
+            resumeModal.classList.add("show");
+            btnContinue.onclick = () => {
+                video.currentTime = savedTime;
+                resumeModal.classList.remove("show");
+                hideBackdropAndShowVideo();
+                hasStarted = true;
+                video.play();
+            };
+            btnRestart.onclick = () => {
+                localStorage.removeItem(STORAGE_KEY);
+                resumeModal.classList.remove("show");
+                hideBackdropAndShowVideo();
+                hasStarted = true;
+                video.play();
+            };
+        }
+    }
+
+    function loadMetadata() {
+        titleEl.textContent = TITLE || "Reproduciendo";
+        if (POSTER_URL) {
+            backdropOverlay.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url('${POSTER_URL}')`;
+        } else {
+            backdropOverlay.style.background = '#111';
+        }
+        
+        // 🔥 Aquí llamamos a la nueva función asíncrona
+        if (VIDEO_URL) {
+            processAndLoadVideo(VIDEO_URL);
+        }
+        
+        checkNextEpisode();
+    }
+
+    video.addEventListener("waiting", () => { if (isChangingQuality) qualityLoader.classList.add("show"); });
+    video.addEventListener("playing", () => { 
+        if (isChangingQuality) {
+            qualityLoader.classList.remove("show");
+            isChangingQuality = false;
+        }
+    });
+
+    video.addEventListener("timeupdate", () => {
+        const c = video.currentTime;
+        const t = video.duration;
+        if (!isNaN(t) && t > 0) {
+            seek.value = (c / t) * 100;
+            currentTimeEl.textContent = formatTime(c);
+        }
+        if (!saveInterval && video.duration) {
+            saveInterval = setInterval(saveProgress, 1000);
+        }
+    });
+
+    seek.addEventListener("input", () => {
+        if (video.duration) video.currentTime = (seek.value / 100) * video.duration;
+    });
+
+    function hideBackdropAndShowVideo() {
+        backdropOverlay.style.transition = "opacity 0.6s ease";
+        backdropOverlay.style.opacity = "0";
+        setTimeout(() => { backdropOverlay.style.display = "none"; }, 600);
+        video.style.transition = "opacity 0.6s ease";
+        video.style.opacity = "1";
+    }
+
+    window.togglePlay = function() {
+        if (video.paused) {
+            if (!hasStarted) {
+                hideBackdropAndShowVideo();
+                hasStarted = true;
+            }
+            video.play().catch(() => {});
+        } else {
+            video.pause();
+        }
+    };
+
+    window.rewind = function() {
+        rewindBtn.classList.add("btn-rewind");
+        setTimeout(() => rewindBtn.classList.remove("btn-rewind"), 450);
+        video.currentTime = Math.max(0, video.currentTime - 10);
+    };
+
+    window.forward = function() {
+        forwardBtn.classList.add("btn-forward");
+        setTimeout(() => forwardBtn.classList.remove("btn-forward"), 450);
+        video.currentTime = Math.min(video.duration || 0, video.currentTime + 10);
+    };
+
+    // ==================== EVENTO MENÚ CONFIGURACIÓN ====================
+    settingsBtn.addEventListener("click", (e) => {
+        e.stopImmediatePropagation();
+        settingsMenu.classList.toggle("show");
+        settingsBtn.classList.toggle("settings-btn-active");
+        if (settingsMenu.classList.contains("show")) {
+            if (hlsInstance) loadQualityOptions();
+            loadSizeOptions();
+        }
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!settingsMenu.contains(e.target) && e.target !== settingsBtn) {
+            settingsMenu.classList.remove("show");
+            settingsBtn.classList.remove("settings-btn-active");
+        }
+    });
+
+    // ==================== LÓGICA DE CALIDAD ====================
+    function loadQualityOptions() { 
+        qualityContainer.innerHTML = "";
+        if (!hlsInstance || !hlsInstance.levels.length) {
+            qualityContainer.innerHTML = `<div class="quality-option">No hay calidades disponibles</div>`;
+            return;
+        }
+        let bestLevelIndex = 0;
+        let maxHeight = 0;
+        hlsInstance.levels.forEach((level, i) => {
+            if (level.height > maxHeight) { maxHeight = level.height; bestLevelIndex = i; }
+        });
+        const autoOption = createQualityOption("Auto (Recomendado)", -1, hlsInstance.currentLevel === -1);
+        qualityContainer.appendChild(autoOption);
+        const sortedLevels = [...hlsInstance.levels].map((level, index) => ({...level, originalIndex: index})).sort((a, b) => b.height - a.height);
+        sortedLevels.forEach((level) => {
+            const label = `${level.height}p`;
+            const isActive = hlsInstance.currentLevel === level.originalIndex;
+            const isRecommended = level.originalIndex === bestLevelIndex;
+            const option = createQualityOption(label, level.originalIndex, isActive, isRecommended);
+            qualityContainer.appendChild(option);
+        });
+    }
+
+    function createQualityOption(label, levelIndex, isActive, isRecommended = false) {
+        const div = document.createElement("div");
+        div.className = `quality-option ${isActive ? "active" : ""}`;
+        let html = label;
+        if (isRecommended) html += `<span class="recommended">Recomendada</span>`;
+        if (isActive) html += `<i class="fas fa-check check"></i>`;
+        div.innerHTML = html;
+        div.addEventListener("click", () => {
+            if (!hlsInstance) return;
+            isChangingQuality = true;
+            qualityLoader.classList.add("show");
+            settingsMenu.classList.remove("show");
+            settingsBtn.classList.remove("settings-btn-active");
+            hlsInstance.currentLevel = levelIndex;
+            setTimeout(() => {
+                if (isChangingQuality) {
+                    qualityLoader.classList.remove("show");
+                    isChangingQuality = false;
+                }
+            }, 12000);
+        });
+        return div;
+    }
+
+    // ==================== LÓGICA DE TAMAÑO DE VIDEO (OBJECT-FIT) ====================
+    function loadSizeOptions() {
+        let sizeContainer = document.getElementById("size-options");
+        if (!sizeContainer) {
+            sizeContainer = document.createElement("div");
+            sizeContainer.id = "size-options";
+            settingsMenu.appendChild(sizeContainer);
+        }
+
+        sizeContainer.innerHTML = `<div style="padding: 10px 15px; font-weight: bold; border-top: 1px solid rgba(255,255,255,0.2); margin-top: 10px; font-size: 0.9em; color: #ccc;">Ajuste de Pantalla</div>`;
+
+        const sizeModes = [
+            { label: "Original (Sin cortes)", value: "contain" },
+            { label: "Llenar (Recorta bordes)", value: "cover" },
+            { label: "Estirar pantalla", value: "fill" }
+        ];
+
+        const currentFit = video.style.objectFit || "contain";
+
+        sizeModes.forEach(mode => {
+            const div = document.createElement("div");
+            const isActive = currentFit === mode.value;
+            
+            div.className = `quality-option ${isActive ? "active" : ""}`;
+            
+            let html = mode.label;
+            if (isActive) html += `<i class="fas fa-check check"></i>`;
+            div.innerHTML = html;
+
+            div.addEventListener("click", () => {
+                video.style.objectFit = mode.value;
+                settingsMenu.classList.remove("show");
+                settingsBtn.classList.remove("settings-btn-active");
+            });
+
+            sizeContainer.appendChild(div);
+        });
+    }
+
+    // ==================== CONTROLES Y EVENTOS DE REPRODUCCIÓN ====================
+    video.addEventListener("play", () => { playBtn.className = "fas fa-pause btn big"; });
+    video.addEventListener("pause", () => { playBtn.className = "fas fa-play btn big"; });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.target.tagName === "INPUT") return;
+        if (e.code === "Space") { e.preventDefault(); window.togglePlay(); }
+        if (e.code === "ArrowLeft") window.rewind();
+        if (e.code === "ArrowRight") window.forward();
+    });
+
+    let hideTimeout;
+    function showControls(fast = false) {
+        controls.classList.remove("hide");
+        clearTimeout(hideTimeout);
+        hideTimeout = setTimeout(() => {
+            if (!video.paused) controls.classList.add("hide");
+        }, fast ? 900 : 3500);
+    }
+    document.addEventListener("mousemove", () => showControls(false));
+    document.addEventListener("touchstart", () => showControls(false));
+    video.addEventListener("click", window.togglePlay);
+
+    let lastTapTime = 0;
+    video.addEventListener("touchend", (e) => {
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTapTime;
+        if (tapLength < 350 && tapLength > 0) {
+            e.preventDefault();
+            toggleFullscreen();
+        }
+        lastTapTime = currentTime;
+    });
+
+    function initPlayer() {
+        loadMetadata();
+        video.addEventListener("loadedmetadata", () => {
+            updateTotalTime();
+            loadSavedProgress();
+        });
+        video.addEventListener("durationchange", updateTotalTime);
+    }
+    initPlayer();
+});
+</script>
+</body>
+</html>
